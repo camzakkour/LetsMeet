@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>LetsMeet uses your location to find a restaurant that's a fair midpoint between you and your friend.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>LetsMeet uses your location to find a restaurant that's a fair midpoint between you and your friend.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
