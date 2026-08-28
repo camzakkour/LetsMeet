@@ -12,27 +12,7 @@ import CoreLocation
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
-    var coordinates: [CLLocationCoordinate2D] = [
-        //pretned this is your users location
-            CLLocationCoordinate2D(latitude: 40.8830, longitude: -111.8468),
-            //pretend this is your own location
-            CLLocationCoordinate2D(latitude: 40.524670, longitude: -111.863823)
-        ]
-
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-        
-        //this var
-        let midPointLocation = LocationUtility.shared.geographicMidpoint(betweenCoordinates: coordinates)
-        
-        print("\n\nThe midpoint between:\(coordinates) is ->\n \(midPointLocation)\n\n")
-        
-        CLLocation(latitude: midPointLocation.latitude, longitude: midPointLocation.longitude).placemark { placemark, error in
-            guard let placemark = placemark else {
-                print("place mark was not able to be found: \(error as Any)")
-                return
-            }
-            print(placemark.zipCode)
-        }
         return true
     }
 
