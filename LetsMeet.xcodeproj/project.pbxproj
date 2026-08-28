@@ -1,0 +1,525 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 55;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		120242747728C7CEA31827F7 /* HomeMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A525F7F1122F10D3D89EDD76 /* HomeMapView.swift */; };
+		2E79EBF2FFA575A0CC26DE3C /* HomeNavigationCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB3CEFB0D6EEA75B1C47836A /* HomeNavigationCoordinator.swift */; };
+		39C65558E06763B1421647B7 /* Color+LetsMeet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A4EC2AFE6897BC9E3D6FBB8 /* Color+LetsMeet.swift */; };
+		9AE35DD1FE5F69931546D44F /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F00E50FB652DC0664BD8B2E /* HomeViewModel.swift */; };
+		BB171A622AB25E49006CBDD5 /* config.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB171A612AB25E49006CBDD5 /* config.plist */; };
+		BB333966281C9F8E00A2142E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB333965281C9F8E00A2142E /* AppDelegate.swift */; };
+		BB333968281C9F8E00A2142E /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB333967281C9F8E00A2142E /* SceneDelegate.swift */; };
+		BB33396A281C9F8E00A2142E /* WelcomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB333969281C9F8E00A2142E /* WelcomeViewController.swift */; };
+		BB33396D281C9F8E00A2142E /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = BB33396B281C9F8E00A2142E /* Main.storyboard */; };
+		BB333970281C9F8E00A2142E /* LetsMeet.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = BB33396E281C9F8E00A2142E /* LetsMeet.xcdatamodeld */; };
+		BB333972281C9F9000A2142E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BB333971281C9F9000A2142E /* Assets.xcassets */; };
+		BB333975281C9F9000A2142E /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = BB333973281C9F9000A2142E /* LaunchScreen.storyboard */; };
+		BB51EABE283EE105009C4408 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB51EABD283EE105009C4408 /* LocationManager.swift */; };
+		BB51EAC1283EE136009C4408 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB51EAC0283EE136009C4408 /* Extensions.swift */; };
+		BB51EAC3283F320B009C4408 /* BusinessCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB51EAC2283F320B009C4408 /* BusinessCell.swift */; };
+		BBA91FF42824630A00127CE4 /* DetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBA91FF32824630A00127CE4 /* DetailViewController.swift */; };
+		BBBF5D1528359C5C00DC55C2 /* AlertController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBF5D1428359C5C00DC55C2 /* AlertController.swift */; };
+		BBCC94F728246A2400F61C2E /* YelpResults.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBCC94F628246A2400F61C2E /* YelpResults.swift */; };
+		BBCC94F92824837300F61C2E /* YelpManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBCC94F82824837300F61C2E /* YelpManager.swift */; };
+		BBCC94FB2824838200F61C2E /* NetworkConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBCC94FA2824838200F61C2E /* NetworkConstants.swift */; };
+		E7716D1CA89CF53E93BB4C91 /* LocationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 334D542B2D4824C3F320ED6A /* LocationProvider.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		1F00E50FB652DC0664BD8B2E /* HomeViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
+		334D542B2D4824C3F320ED6A /* LocationProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LocationProvider.swift; sourceTree = "<group>"; };
+		5A4EC2AFE6897BC9E3D6FBB8 /* Color+LetsMeet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "Color+LetsMeet.swift"; sourceTree = "<group>"; };
+		A525F7F1122F10D3D89EDD76 /* HomeMapView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HomeMapView.swift; sourceTree = "<group>"; };
+		BB171A612AB25E49006CBDD5 /* config.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = config.plist; sourceTree = "<group>"; };
+		BB333962281C9F8E00A2142E /* LetsMeet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LetsMeet.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		BB333965281C9F8E00A2142E /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		BB333967281C9F8E00A2142E /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
+		BB333969281C9F8E00A2142E /* WelcomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeViewController.swift; sourceTree = "<group>"; };
+		BB33396C281C9F8E00A2142E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		BB33396F281C9F8E00A2142E /* LetsMeet.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = LetsMeet.xcdatamodel; sourceTree = "<group>"; };
+		BB333971281C9F9000A2142E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		BB333974281C9F9000A2142E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		BB333976281C9F9000A2142E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		BB51EABD283EE105009C4408 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
+		BB51EAC0283EE136009C4408 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
+		BB51EAC2283F320B009C4408 /* BusinessCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessCell.swift; sourceTree = "<group>"; };
+		BBA91FF32824630A00127CE4 /* DetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailViewController.swift; sourceTree = "<group>"; };
+		BBBF5D1428359C5C00DC55C2 /* AlertController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertController.swift; sourceTree = "<group>"; };
+		BBCC94F628246A2400F61C2E /* YelpResults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YelpResults.swift; sourceTree = "<group>"; };
+		BBCC94F82824837300F61C2E /* YelpManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YelpManager.swift; sourceTree = "<group>"; };
+		BBCC94FA2824838200F61C2E /* NetworkConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkConstants.swift; sourceTree = "<group>"; };
+		FB3CEFB0D6EEA75B1C47836A /* HomeNavigationCoordinator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HomeNavigationCoordinator.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		BB33395F281C9F8E00A2142E /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		81D6CF50804C638D837F729D /* SwiftUI */ = {
+			isa = PBXGroup;
+			children = (
+				A525F7F1122F10D3D89EDD76 /* HomeMapView.swift */,
+				1F00E50FB652DC0664BD8B2E /* HomeViewModel.swift */,
+				FB3CEFB0D6EEA75B1C47836A /* HomeNavigationCoordinator.swift */,
+				5A4EC2AFE6897BC9E3D6FBB8 /* Color+LetsMeet.swift */,
+			);
+			name = SwiftUI;
+			path = SwiftUI;
+			sourceTree = "<group>";
+		};
+		BB333959281C9F8E00A2142E = {
+			isa = PBXGroup;
+			children = (
+				BB333964281C9F8E00A2142E /* LetsMeet */,
+				BB333963281C9F8E00A2142E /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		BB333963281C9F8E00A2142E /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				BB333962281C9F8E00A2142E /* LetsMeet.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		BB333964281C9F8E00A2142E /* LetsMeet */ = {
+			isa = PBXGroup;
+			children = (
+				BB51EABF283EE10B009C4408 /* LocationManager */,
+				BBB9AA3B282081BC00F863BB /* Controller */,
+				BBCC94F5282469F800F61C2E /* Model */,
+				BBB9AA3C282081C700F863BB /* ViewController */,
+				BBB9AA3D282081DA00F863BB /* Storyboards */,
+				BBB9AA3E282081E700F863BB /* Resources */,
+				BB51EAC4283F320F009C4408 /* View */,
+				81D6CF50804C638D837F729D /* SwiftUI */,
+			);
+			path = LetsMeet;
+			sourceTree = "<group>";
+		};
+		BB51EABF283EE10B009C4408 /* LocationManager */ = {
+			isa = PBXGroup;
+			children = (
+				BB51EABD283EE105009C4408 /* LocationManager.swift */,
+				BB51EAC0283EE136009C4408 /* Extensions.swift */,
+				334D542B2D4824C3F320ED6A /* LocationProvider.swift */,
+			);
+			path = LocationManager;
+			sourceTree = "<group>";
+		};
+		BB51EAC4283F320F009C4408 /* View */ = {
+			isa = PBXGroup;
+			children = (
+				BB51EAC2283F320B009C4408 /* BusinessCell.swift */,
+			);
+			path = View;
+			sourceTree = "<group>";
+		};
+		BBB9AA3B282081BC00F863BB /* Controller */ = {
+			isa = PBXGroup;
+			children = (
+				BB333965281C9F8E00A2142E /* AppDelegate.swift */,
+				BB333967281C9F8E00A2142E /* SceneDelegate.swift */,
+				BBBF5D1428359C5C00DC55C2 /* AlertController.swift */,
+			);
+			path = Controller;
+			sourceTree = "<group>";
+		};
+		BBB9AA3C282081C700F863BB /* ViewController */ = {
+			isa = PBXGroup;
+			children = (
+				BB333969281C9F8E00A2142E /* WelcomeViewController.swift */,
+				BBA91FF32824630A00127CE4 /* DetailViewController.swift */,
+			);
+			path = ViewController;
+			sourceTree = "<group>";
+		};
+		BBB9AA3D282081DA00F863BB /* Storyboards */ = {
+			isa = PBXGroup;
+			children = (
+				BB33396B281C9F8E00A2142E /* Main.storyboard */,
+				BB333973281C9F9000A2142E /* LaunchScreen.storyboard */,
+			);
+			path = Storyboards;
+			sourceTree = "<group>";
+		};
+		BBB9AA3E282081E700F863BB /* Resources */ = {
+			isa = PBXGroup;
+			children = (
+				BB333971281C9F9000A2142E /* Assets.xcassets */,
+				BB333976281C9F9000A2142E /* Info.plist */,
+				BB33396E281C9F8E00A2142E /* LetsMeet.xcdatamodeld */,
+				BB171A612AB25E49006CBDD5 /* config.plist */,
+			);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+		BBCC94F5282469F800F61C2E /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				BBCC94FA2824838200F61C2E /* NetworkConstants.swift */,
+				BBCC94F82824837300F61C2E /* YelpManager.swift */,
+				BBCC94F628246A2400F61C2E /* YelpResults.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		BB333961281C9F8E00A2142E /* LetsMeet */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = BB333979281C9F9000A2142E /* Build configuration list for PBXNativeTarget "LetsMeet" */;
+			buildPhases = (
+				BB33395E281C9F8E00A2142E /* Sources */,
+				BB33395F281C9F8E00A2142E /* Frameworks */,
+				BB333960281C9F8E00A2142E /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = LetsMeet;
+			productName = LetsMeet;
+			productReference = BB333962281C9F8E00A2142E /* LetsMeet.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		BB33395A281C9F8E00A2142E /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1330;
+				LastUpgradeCheck = 1330;
+				TargetAttributes = {
+					BB333961281C9F8E00A2142E = {
+						CreatedOnToolsVersion = 13.3.1;
+					};
+				};
+			};
+			buildConfigurationList = BB33395D281C9F8E00A2142E /* Build configuration list for PBXProject "LetsMeet" */;
+			compatibilityVersion = "Xcode 13.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = BB333959281C9F8E00A2142E;
+			productRefGroup = BB333963281C9F8E00A2142E /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				BB333961281C9F8E00A2142E /* LetsMeet */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		BB333960281C9F8E00A2142E /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BB171A622AB25E49006CBDD5 /* config.plist in Resources */,
+				BB333975281C9F9000A2142E /* LaunchScreen.storyboard in Resources */,
+				BB333972281C9F9000A2142E /* Assets.xcassets in Resources */,
+				BB33396D281C9F8E00A2142E /* Main.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		BB33395E281C9F8E00A2142E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				BBCC94FB2824838200F61C2E /* NetworkConstants.swift in Sources */,
+				BBBF5D1528359C5C00DC55C2 /* AlertController.swift in Sources */,
+				BB51EABE283EE105009C4408 /* LocationManager.swift in Sources */,
+				BB333970281C9F8E00A2142E /* LetsMeet.xcdatamodeld in Sources */,
+				BB33396A281C9F8E00A2142E /* WelcomeViewController.swift in Sources */,
+				BB51EAC3283F320B009C4408 /* BusinessCell.swift in Sources */,
+				BBCC94F728246A2400F61C2E /* YelpResults.swift in Sources */,
+				BBCC94F92824837300F61C2E /* YelpManager.swift in Sources */,
+				BBA91FF42824630A00127CE4 /* DetailViewController.swift in Sources */,
+				BB333966281C9F8E00A2142E /* AppDelegate.swift in Sources */,
+				BB51EAC1283EE136009C4408 /* Extensions.swift in Sources */,
+				BB333968281C9F8E00A2142E /* SceneDelegate.swift in Sources */,
+				E7716D1CA89CF53E93BB4C91 /* LocationProvider.swift in Sources */,
+				120242747728C7CEA31827F7 /* HomeMapView.swift in Sources */,
+				9AE35DD1FE5F69931546D44F /* HomeViewModel.swift in Sources */,
+				2E79EBF2FFA575A0CC26DE3C /* HomeNavigationCoordinator.swift in Sources */,
+				39C65558E06763B1421647B7 /* Color+LetsMeet.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		BB33396B281C9F8E00A2142E /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				BB33396C281C9F8E00A2142E /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+		BB333973281C9F9000A2142E /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				BB333974281C9F9000A2142E /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		BB333977281C9F9000A2142E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDarkContent;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.4;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		BB333978281C9F9000A2142E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleDarkContent;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.4;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		BB33397A281C9F9000A2142E /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CRQ4BGS2H2;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LetsMeet/Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Let's Meet";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.navigation";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Let's Meet is a location based app. We use your location to meet with your friends in the middle.";
+				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "This is also how we will connect you with your friend.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Let's Meet is a location based app. We use your location to meet with your friends in the middle.";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				"MARKETING_VERSION[sdk=*]" = 1.1;
+				"MARKETING_VERSION[sdk=iphoneos*]" = 1.1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.CameronZakkour.LetsMeet;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		BB33397B281C9F9000A2142E /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = CRQ4BGS2H2;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = LetsMeet/Resources/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = "Let's Meet";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.navigation";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "Let's Meet is a location based app. We use your location to meet with your friends in the middle.";
+				INFOPLIST_KEY_NSLocationAlwaysUsageDescription = "This is also how we will connect you with your friend.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Let's Meet is a location based app. We use your location to meet with your friends in the middle.";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = Main;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				"MARKETING_VERSION[sdk=*]" = 1.1;
+				"MARKETING_VERSION[sdk=iphoneos*]" = 1.1.2;
+				PRODUCT_BUNDLE_IDENTIFIER = com.CameronZakkour.LetsMeet;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		BB33395D281C9F8E00A2142E /* Build configuration list for PBXProject "LetsMeet" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BB333977281C9F9000A2142E /* Debug */,
+				BB333978281C9F9000A2142E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		BB333979281C9F9000A2142E /* Build configuration list for PBXNativeTarget "LetsMeet" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				BB33397A281C9F9000A2142E /* Debug */,
+				BB33397B281C9F9000A2142E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		BB33396E281C9F8E00A2142E /* LetsMeet.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				BB33396F281C9F8E00A2142E /* LetsMeet.xcdatamodel */,
+			);
+			currentVersion = BB33396F281C9F8E00A2142E /* LetsMeet.xcdatamodel */;
+			path = LetsMeet.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
+	};
+	rootObject = BB33395A281C9F8E00A2142E /* Project object */;
+}

@@ -104,7 +104,7 @@
         <!--Detail View Controller-->
         <scene sceneID="4od-BD-BqK">
             <objects>
-                <viewController id="F76-sI-qqw" customClass="DetailViewController" customModule="LetsMeet" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="F76-sI-qqw" customClass="DetailViewController" customModule="LetsMeet" customModuleProvider="target" storyboardIdentifier="DetailViewController" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="2xc-CT-YJ7">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="886"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>

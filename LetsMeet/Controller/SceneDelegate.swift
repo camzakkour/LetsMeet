@@ -6,17 +6,31 @@
 //
 
 import UIKit
+import SwiftUI
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
 
+    // Keeps the coordinator alive; HomeViewModel only holds a weak reference to it.
+    private var homeNavigationCoordinator: HomeNavigationCoordinator?
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
-        // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
-        // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
-        // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
-        guard let _ = (scene as? UIWindowScene) else { return }
+        guard let windowScene = (scene as? UIWindowScene) else { return }
+
+        let homeViewModel = HomeViewModel()
+        let hostingController = UIHostingController(rootView: HomeMapView(viewModel: homeViewModel))
+        let navigationController = UINavigationController(rootViewController: hostingController)
+        navigationController.setNavigationBarHidden(true, animated: false)
+
+        let coordinator = HomeNavigationCoordinator(navigationController: navigationController)
+        homeViewModel.navigator = coordinator
+        homeNavigationCoordinator = coordinator
+
+        let window = UIWindow(windowScene: windowScene)
+        window.rootViewController = navigationController
+        self.window = window
+        window.makeKeyAndVisible()
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
