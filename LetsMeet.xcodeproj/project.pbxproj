@@ -28,11 +28,14 @@
 		BBCC94F92824837300F61C2E /* YelpManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBCC94F82824837300F61C2E /* YelpManager.swift */; };
 		BBCC94FB2824838200F61C2E /* NetworkConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBCC94FA2824838200F61C2E /* NetworkConstants.swift */; };
 		E7716D1CA89CF53E93BB4C91 /* LocationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 334D542B2D4824C3F320ED6A /* LocationProvider.swift */; };
+		F49A55760DF9FC6493036ECB /* LetsMeetLaunchIntro.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBE015D30A49CB0657C08F62 /* LetsMeetLaunchIntro.swift */; };
+		F96255B09D5A28ABFAC93591 /* LetsMeetLogo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 557300A0751AE65A2735CCC6 /* LetsMeetLogo.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		1F00E50FB652DC0664BD8B2E /* HomeViewModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HomeViewModel.swift; sourceTree = "<group>"; };
 		334D542B2D4824C3F320ED6A /* LocationProvider.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LocationProvider.swift; sourceTree = "<group>"; };
+		557300A0751AE65A2735CCC6 /* LetsMeetLogo.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LetsMeetLogo.swift; sourceTree = "<group>"; };
 		5A4EC2AFE6897BC9E3D6FBB8 /* Color+LetsMeet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "Color+LetsMeet.swift"; sourceTree = "<group>"; };
 		A525F7F1122F10D3D89EDD76 /* HomeMapView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HomeMapView.swift; sourceTree = "<group>"; };
 		BB171A612AB25E49006CBDD5 /* config.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = config.plist; sourceTree = "<group>"; };
@@ -53,6 +56,7 @@
 		BBCC94F628246A2400F61C2E /* YelpResults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YelpResults.swift; sourceTree = "<group>"; };
 		BBCC94F82824837300F61C2E /* YelpManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YelpManager.swift; sourceTree = "<group>"; };
 		BBCC94FA2824838200F61C2E /* NetworkConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkConstants.swift; sourceTree = "<group>"; };
+		CBE015D30A49CB0657C08F62 /* LetsMeetLaunchIntro.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LetsMeetLaunchIntro.swift; sourceTree = "<group>"; };
 		FB3CEFB0D6EEA75B1C47836A /* HomeNavigationCoordinator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HomeNavigationCoordinator.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -74,6 +78,8 @@
 				1F00E50FB652DC0664BD8B2E /* HomeViewModel.swift */,
 				FB3CEFB0D6EEA75B1C47836A /* HomeNavigationCoordinator.swift */,
 				5A4EC2AFE6897BC9E3D6FBB8 /* Color+LetsMeet.swift */,
+				557300A0751AE65A2735CCC6 /* LetsMeetLogo.swift */,
+				CBE015D30A49CB0657C08F62 /* LetsMeetLaunchIntro.swift */,
 			);
 			name = SwiftUI;
 			path = SwiftUI;
@@ -266,6 +272,8 @@
 				9AE35DD1FE5F69931546D44F /* HomeViewModel.swift in Sources */,
 				2E79EBF2FFA575A0CC26DE3C /* HomeNavigationCoordinator.swift in Sources */,
 				39C65558E06763B1421647B7 /* Color+LetsMeet.swift in Sources */,
+				F96255B09D5A28ABFAC93591 /* LetsMeetLogo.swift in Sources */,
+				F49A55760DF9FC6493036ECB /* LetsMeetLaunchIntro.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

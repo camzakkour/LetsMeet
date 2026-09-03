@@ -19,7 +19,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
 
         let homeViewModel = HomeViewModel()
-        let hostingController = UIHostingController(rootView: HomeMapView(viewModel: homeViewModel))
+        let hostingController = UIHostingController(rootView: LaunchContainerView(homeViewModel: homeViewModel))
         let navigationController = UINavigationController(rootViewController: hostingController)
         navigationController.setNavigationBarHidden(true, animated: false)
 

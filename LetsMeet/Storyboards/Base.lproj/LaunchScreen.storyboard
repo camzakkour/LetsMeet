@@ -15,19 +15,9 @@
                     <view key="view" contentMode="scaleToFill" id="Ze5-6b-2t3">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <subviews>
-                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="Image" translatesAutoresizingMaskIntoConstraints="NO" id="0dw-ib-9xk">
-                                <rect key="frame" x="76" y="362" width="240" height="128"/>
-                            </imageView>
-                        </subviews>
+                        <subviews/>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                        <constraints>
-                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="0dw-ib-9xk" secondAttribute="bottom" constant="328" id="2lV-uP-0dH"/>
-                            <constraint firstItem="0dw-ib-9xk" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="303" id="EUg-IA-UpF"/>
-                            <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="0dw-ib-9xk" secondAttribute="trailing" constant="77" id="Sc0-ey-Pby"/>
-                            <constraint firstItem="0dw-ib-9xk" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="76" id="ymF-Ul-QtG"/>
-                        </constraints>
                     </view>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="iYj-Kq-Ea1" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -35,7 +25,4 @@
             <point key="canvasLocation" x="52.671755725190835" y="374.64788732394368"/>
         </scene>
     </scenes>
-    <resources>
-        <image name="Image" width="1080" height="608"/>
-    </resources>
 </document>
