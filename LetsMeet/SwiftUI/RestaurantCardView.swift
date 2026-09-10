@@ -13,7 +13,7 @@ struct RestaurantCardView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            heroImage
+            RestaurantPhotoGalleryView(businessID: restaurant.id, fallbackImageURL: restaurant.imageURL)
 
             Text(restaurant.name)
                 .font(.headline)
@@ -35,35 +35,6 @@ struct RestaurantCardView: View {
         .background(Color(.secondarySystemBackground))
         .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
         .shadow(color: .black.opacity(0.08), radius: 8, y: 4)
-    }
-
-    private var heroImage: some View {
-        AsyncImage(url: restaurant.imageURL) { phase in
-            switch phase {
-            case .success(let image):
-                image
-                    .resizable()
-                    .scaledToFill()
-            case .failure, .empty:
-                placeholderImage
-            @unknown default:
-                placeholderImage
-            }
-        }
-        .frame(height: 180)
-        .frame(maxWidth: .infinity)
-        .clipped()
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-    }
-
-    private var placeholderImage: some View {
-        RoundedRectangle(cornerRadius: 16, style: .continuous)
-            .fill(LetsMeetColor.lightBlue.opacity(0.15))
-            .overlay(
-                Image(systemName: "fork.knife")
-                    .font(.system(size: 36))
-                    .foregroundColor(LetsMeetColor.lightBlue)
-            )
     }
 
     private var metadataRow: some View {

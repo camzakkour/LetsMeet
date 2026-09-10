@@ -11,6 +11,7 @@
 		20E1E4C7AD1914259A888DE3 /* RestaurantResultsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E65926C85AD5E7849CC7F3C /* RestaurantResultsSheet.swift */; };
 		2E79EBF2FFA575A0CC26DE3C /* HomeNavigationCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB3CEFB0D6EEA75B1C47836A /* HomeNavigationCoordinator.swift */; };
 		39C65558E06763B1421647B7 /* Color+LetsMeet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A4EC2AFE6897BC9E3D6FBB8 /* Color+LetsMeet.swift */; };
+		5EC6CA632E36414EFAF5B47F /* RestaurantPhotoGalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CCF0085A703C668C2ED4455 /* RestaurantPhotoGalleryView.swift */; };
 		9AE35DD1FE5F69931546D44F /* HomeViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F00E50FB652DC0664BD8B2E /* HomeViewModel.swift */; };
 		BB171A622AB25E49006CBDD5 /* config.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB171A612AB25E49006CBDD5 /* config.plist */; };
 		BB333966281C9F8E00A2142E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB333965281C9F8E00A2142E /* AppDelegate.swift */; };
@@ -40,6 +41,7 @@
 		424C6F06066C1C28C1C9C01F /* RestaurantCardView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RestaurantCardView.swift; sourceTree = "<group>"; };
 		557300A0751AE65A2735CCC6 /* LetsMeetLogo.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LetsMeetLogo.swift; sourceTree = "<group>"; };
 		5A4EC2AFE6897BC9E3D6FBB8 /* Color+LetsMeet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "Color+LetsMeet.swift"; sourceTree = "<group>"; };
+		9CCF0085A703C668C2ED4455 /* RestaurantPhotoGalleryView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RestaurantPhotoGalleryView.swift; sourceTree = "<group>"; };
 		9E65926C85AD5E7849CC7F3C /* RestaurantResultsSheet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RestaurantResultsSheet.swift; sourceTree = "<group>"; };
 		A525F7F1122F10D3D89EDD76 /* HomeMapView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HomeMapView.swift; sourceTree = "<group>"; };
 		BB171A612AB25E49006CBDD5 /* config.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = config.plist; sourceTree = "<group>"; };
@@ -86,6 +88,7 @@
 				CBE015D30A49CB0657C08F62 /* LetsMeetLaunchIntro.swift */,
 				424C6F06066C1C28C1C9C01F /* RestaurantCardView.swift */,
 				9E65926C85AD5E7849CC7F3C /* RestaurantResultsSheet.swift */,
+				9CCF0085A703C668C2ED4455 /* RestaurantPhotoGalleryView.swift */,
 			);
 			name = SwiftUI;
 			path = SwiftUI;
@@ -282,6 +285,7 @@
 				F49A55760DF9FC6493036ECB /* LetsMeetLaunchIntro.swift in Sources */,
 				FD7DACEB2F5F27815709ED73 /* RestaurantCardView.swift in Sources */,
 				20E1E4C7AD1914259A888DE3 /* RestaurantResultsSheet.swift in Sources */,
+				5EC6CA632E36414EFAF5B47F /* RestaurantPhotoGalleryView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

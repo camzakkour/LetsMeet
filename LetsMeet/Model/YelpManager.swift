@@ -23,7 +23,14 @@ class YelpManager {
     var currentUserLocation: CLLocation?
     var friendLocation: CLLocation?
     var midPoint: CLLocation?
-    
+
+    /// Photos fetched from Business Details, cached by business ID for the
+    /// session so scrolling a restaurant card away and back doesn't refetch.
+    private var photoCache: [String: [URL]] = [:]
+    /// Completions waiting on an in-flight Details request for a given ID,
+    /// so two near-simultaneous card appearances don't fire duplicate requests.
+    private var inFlightPhotoRequests: [String: [(Result<[URL], YelpManagerError>) -> Void]] = [:]
+
     func didCaptureFriendsLocation(location: CLLocation) {
         friendLocation = location
         midPoint = findMidpoint()
@@ -79,6 +86,60 @@ class YelpManager {
         }.resume()
     }
     
+    /// Fetches the multi-photo gallery for one business from Business Details
+    /// (GET /v3/businesses/{id}), the endpoint/field verified to return up to
+    /// 3 photos on this app's current Yelp plan. Cached by business ID so
+    /// repeat calls for the same restaurant resolve without a network request.
+    func fetchPhotos(forBusinessID id: String, completion: @escaping (Result<[URL], YelpManagerError>) -> Void) {
+        if let cached = photoCache[id] {
+            return completion(.success(cached))
+        }
+
+        if inFlightPhotoRequests[id] != nil {
+            inFlightPhotoRequests[id]?.append(completion)
+            return
+        }
+        inFlightPhotoRequests[id] = [completion]
+
+        guard let url = URL(string: NetworkURLConstants.businessDetails + id) else {
+            let callbacks = inFlightPhotoRequests.removeValue(forKey: id) ?? []
+            callbacks.forEach { $0(.failure(.failedToUnwrapData)) }
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.allHTTPHeaderFields = YelpTokenConstants.headers
+
+        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+            guard let self = self else { return }
+            let callbacks = self.inFlightPhotoRequests.removeValue(forKey: id) ?? []
+
+            func finish(_ result: Result<[URL], YelpManagerError>) {
+                callbacks.forEach { $0(result) }
+            }
+
+            if let error = error {
+                return finish(.failure(.failedRequestWithError(error)))
+            }
+
+            guard let responseCode = (response as? HTTPURLResponse)?.statusCode,
+                  responseCode >= 200,
+                  responseCode < 300
+            else { return finish(.failure(.invalidResponseCode)) }
+
+            guard let data = data
+            else { return finish(.failure(.failedToUnwrapData)) }
+
+            do {
+                let photos = try JSONDecoder().decode(BusinessDetails.self, from: data).photos
+                self.photoCache[id] = photos
+                finish(.success(photos))
+            } catch {
+                finish(.failure(.failedToDecodeRestaurants(error)))
+            }
+        }.resume()
+    }
+
     private func findMidpoint() -> CLLocation? {
         guard let currentUserCoordinate = currentUserLocation?.coordinate,
               let friendCoordinate = friendLocation?.coordinate

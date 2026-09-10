@@ -64,3 +64,10 @@ struct Location: Decodable, Equatable {
 struct Categories: Decodable, Equatable {
     var title: String
 }
+
+/// Decodes only the field we need from Yelp's Business Details response
+/// (GET /v3/businesses/{id}) - the multi-photo gallery source, distinct
+/// from the single image_url Business Search already provides.
+struct BusinessDetails: Decodable {
+    var photos: [URL]
+}
