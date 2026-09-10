@@ -15,6 +15,8 @@ final class HomeViewModel: ObservableObject {
     @Published var addressText: String = ""
     @Published var isSearching: Bool = false
     @Published var errorMessage: String?
+    @Published var restaurants: [Restaurant] = []
+    @Published var isShowingResults: Bool = false
 
     weak var navigator: HomeNavigating?
 
@@ -31,15 +33,31 @@ final class HomeViewModel: ObservableObject {
             guard let self = self else { return }
 
             DispatchQueue.main.async {
-                self.isSearching = false
-
                 guard let location = placemarks?.first?.location else {
+                    self.isSearching = false
                     self.errorMessage = "\(trimmedAddress) Invalid Address"
                     return
                 }
 
                 YelpManager.shared.didCaptureFriendsLocation(location: location)
-                self.navigator?.showResults()
+                self.searchForRestaurants()
+            }
+        }
+    }
+
+    private func searchForRestaurants() {
+        YelpManager.shared.searchBusiness { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self = self else { return }
+                self.isSearching = false
+
+                switch result {
+                case .success:
+                    self.restaurants = YelpManager.shared.restaurants
+                    self.isShowingResults = true
+                case .failure:
+                    self.errorMessage = "We couldn't find restaurants near your midpoint. Please try again."
+                }
             }
         }
     }

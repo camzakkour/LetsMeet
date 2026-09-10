@@ -16,23 +16,35 @@ struct HomeMapView: View {
         span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
     )
     @State private var hasCenteredOnUser = false
+    @State private var resultsDetent: PresentationDetent = .medium
 
     var body: some View {
         ZStack(alignment: .top) {
-            Map(coordinateRegion: $region, showsUserLocation: true)
-                .ignoresSafeArea()
+            Map(coordinateRegion: $region, showsUserLocation: true, annotationItems: mappableRestaurants) { restaurant in
+                MapAnnotation(coordinate: restaurant.coordinate!) {
+                    RestaurantMapPin()
+                }
+            }
+            .ignoresSafeArea()
 
             brandingBadge
                 .padding(.top, 8)
 
-            VStack {
-                Spacer()
-                bottomCard
+            if !viewModel.isShowingResults {
+                VStack {
+                    Spacer()
+                    bottomCard
+                }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
+        .animation(.easeInOut, value: viewModel.isShowingResults)
         .onAppear { locationProvider.requestLocation() }
         .onChange(of: locationProvider.currentCoordinate?.latitude) { _ in
             recenterOnUserIfNeeded()
+        }
+        .onChange(of: viewModel.restaurants) { _ in
+            fitMapToRestaurants()
         }
         .alert(
             "Invalid Address",
@@ -45,6 +57,51 @@ struct HomeMapView: View {
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
+        .sheet(isPresented: $viewModel.isShowingResults) {
+            RestaurantResultsSheet(restaurants: viewModel.restaurants)
+                .presentationDetents([.medium, .large], selection: $resultsDetent)
+                .presentationDragIndicator(.visible)
+                .presentationBackgroundInteraction(.enabled(upThrough: .medium))
+        }
+    }
+
+    /// Restaurants Yelp returned coordinates for - annotationItems/MapAnnotation
+    /// both need a concrete, non-optional coordinate per item.
+    private var mappableRestaurants: [Restaurant] {
+        viewModel.restaurants.filter { $0.coordinate != nil }
+    }
+
+    /// Frames the map around the recommended restaurants (plus the midpoint and
+    /// the user's own location, when available) using MapKit's own coordinate/
+    /// region types rather than a hard-coded zoom level. The center is nudged
+    /// south so the fitted area renders in the upper portion of the screen,
+    /// since the medium results sheet covers roughly the bottom half.
+    private func fitMapToRestaurants() {
+        let coordinates = mappableRestaurants.map(\.coordinate!)
+        guard !coordinates.isEmpty else { return }
+
+        var mapRect = MKMapRect.null
+        for coordinate in coordinates {
+            let point = MKMapPoint(coordinate)
+            mapRect = mapRect.union(MKMapRect(x: point.x, y: point.y, width: 0, height: 0))
+        }
+        if let midpoint = YelpManager.shared.midPoint?.coordinate {
+            let point = MKMapPoint(midpoint)
+            mapRect = mapRect.union(MKMapRect(x: point.x, y: point.y, width: 0, height: 0))
+        }
+        // Include the user's own location so the blue location indicator stays
+        // visible on screen once the camera reframes to the restaurant area.
+        if let userCoordinate = locationProvider.currentCoordinate {
+            let point = MKMapPoint(userCoordinate)
+            mapRect = mapRect.union(MKMapRect(x: point.x, y: point.y, width: 0, height: 0))
+        }
+
+        var fitted = MKCoordinateRegion(mapRect)
+        fitted.span.latitudeDelta = max(fitted.span.latitudeDelta * 1.5, 0.01)
+        fitted.span.longitudeDelta = max(fitted.span.longitudeDelta * 1.5, 0.01)
+        fitted.center.latitude -= fitted.span.latitudeDelta * 0.28
+
+        region = fitted
     }
 
     private func recenterOnUserIfNeeded() {
@@ -126,5 +183,21 @@ struct HomeMapView: View {
         .shadow(color: .black.opacity(0.15), radius: 16, y: 6)
         .padding(.horizontal, 16)
         .padding(.bottom, 24)
+    }
+}
+
+/// A simple, brand-colored pin marking one recommended restaurant on the map.
+/// All restaurant pins share this same design for this pass.
+private struct RestaurantMapPin: View {
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(Color.white)
+                .frame(width: 30, height: 30)
+                .shadow(color: .black.opacity(0.25), radius: 3, y: 2)
+            Image(systemName: "fork.knife.circle.fill")
+                .font(.system(size: 26))
+                .foregroundColor(LetsMeetColor.orange)
+        }
     }
 }
