@@ -47,7 +47,7 @@ struct HomeMapView: View {
             fitMapToRestaurants()
         }
         .alert(
-            "Invalid Address",
+            viewModel.errorTitle,
             isPresented: Binding(
                 get: { viewModel.errorMessage != nil },
                 set: { isPresented in if !isPresented { viewModel.errorMessage = nil } }

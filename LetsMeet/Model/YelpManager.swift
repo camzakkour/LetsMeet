@@ -86,6 +86,57 @@ class YelpManager {
         }.resume()
     }
     
+    /// Searches Yelp Business Search for restaurants near an explicit center
+    /// and radius, used by the travel-time-fair midpoint flow (see
+    /// MeetingPlaceFinder/RestaurantFairnessSelector). Unlike `searchBusiness`,
+    /// this restricts results to restaurants and sets an explicit radius
+    /// instead of relying on Yelp's default, and does not mutate `restaurants`
+    /// or `midPoint` itself - the caller decides what to do with the results.
+    func searchRestaurants(
+        near center: CLLocationCoordinate2D,
+        radiusMeters: Double,
+        completion: @escaping (Result<[Restaurant], YelpManagerError>) -> Void
+    ) {
+        // Yelp's Business Search endpoint rejects radius values above 40,000m.
+        let clampedRadius = min(radiusMeters, 40_000)
+
+        let queryItems = [
+            URLQueryItem(name: "latitude", value: String(center.latitude)),
+            URLQueryItem(name: "longitude", value: String(center.longitude)),
+            URLQueryItem(name: "radius", value: String(Int(clampedRadius))),
+            URLQueryItem(name: "categories", value: "restaurants"),
+            URLQueryItem(name: "limit", value: "20")
+        ]
+
+        var components = URLComponents(string: NetworkURLConstants.businessSearch)!
+        components.queryItems = queryItems
+        guard let url = components.url else { return completion(.failure(.failedToUnwrapData)) }
+
+        var request = URLRequest(url: url)
+        request.allHTTPHeaderFields = YelpTokenConstants.headers
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                return completion(.failure(.failedRequestWithError(error)))
+            }
+
+            guard let responseCode = (response as? HTTPURLResponse)?.statusCode,
+                  responseCode >= 200,
+                  responseCode < 300
+            else { return completion(.failure(.invalidResponseCode)) }
+
+            guard let data = data
+            else { return completion(.failure(.failedToUnwrapData)) }
+
+            do {
+                let restaurants = try JSONDecoder().decode(TopLevelDictionary.self, from: data).businesses
+                completion(.success(restaurants))
+            } catch {
+                completion(.failure(.failedToDecodeRestaurants(error)))
+            }
+        }.resume()
+    }
+
     /// Fetches the multi-photo gallery for one business from Business Details
     /// (GET /v3/businesses/{id}), the endpoint/field verified to return up to
     /// 3 photos on this app's current Yelp plan. Cached by business ID so

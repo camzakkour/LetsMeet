@@ -14,6 +14,7 @@ final class HomeViewModel: ObservableObject {
 
     @Published var addressText: String = ""
     @Published var isSearching: Bool = false
+    @Published var errorTitle: String = "Error"
     @Published var errorMessage: String?
     @Published var restaurants: [Restaurant] = []
     @Published var isShowingResults: Bool = false
@@ -23,6 +24,7 @@ final class HomeViewModel: ObservableObject {
     func findAPlace() {
         let trimmedAddress = addressText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedAddress.isEmpty else {
+            errorTitle = "Missing Address"
             errorMessage = "Please enter a full address and try again"
             return
         }
@@ -33,29 +35,60 @@ final class HomeViewModel: ObservableObject {
             guard let self = self else { return }
 
             DispatchQueue.main.async {
-                guard let location = placemarks?.first?.location else {
+                guard let friendLocation = placemarks?.first?.location else {
                     self.isSearching = false
+                    self.errorTitle = "Address Not Found"
                     self.errorMessage = "\(trimmedAddress) Invalid Address"
                     return
                 }
 
-                YelpManager.shared.didCaptureFriendsLocation(location: location)
-                self.searchForRestaurants()
+                guard let userLocation = YelpManager.shared.currentUserLocation else {
+                    self.isSearching = false
+                    self.errorTitle = "Location Unavailable"
+                    self.errorMessage = "We couldn't determine your current location. Please try again."
+                    return
+                }
+
+                YelpManager.shared.friendLocation = friendLocation
+                self.searchForRestaurants(userLocation: userLocation, friendLocation: friendLocation)
             }
         }
     }
 
-    private func searchForRestaurants() {
-        YelpManager.shared.searchBusiness { [weak self] result in
+    /// Runs the route-seeded, restaurant-first search (see
+    /// MeetingPlaceFinder) rather than the plain geographic-midpoint search
+    /// the legacy UIKit flow still uses. Every outcome case is handled
+    /// explicitly so a limited or empty result is never silently presented
+    /// as a normal, fully-fair success.
+    private func searchForRestaurants(userLocation: CLLocation, friendLocation: CLLocation) {
+        MeetingPlaceFinder.shared.findMeetingPlace(userLocation: userLocation, friendLocation: friendLocation) { [weak self] outcome in
             DispatchQueue.main.async {
                 guard let self = self else { return }
                 self.isSearching = false
 
-                switch result {
-                case .success:
-                    self.restaurants = YelpManager.shared.restaurants
+                switch outcome {
+                case .success(let restaurants):
+                    YelpManager.shared.restaurants = restaurants
+                    self.restaurants = restaurants
                     self.isShowingResults = true
-                case .failure:
+
+                case .limitedFairOptions(let restaurants):
+                    YelpManager.shared.restaurants = restaurants
+                    self.restaurants = restaurants
+                    self.isShowingResults = true
+                    self.errorTitle = "Limited Options"
+                    self.errorMessage = "We only found a couple of restaurants with fair travel times for both of you."
+
+                case .noFairRestaurants:
+                    self.errorTitle = "No Fair Options"
+                    self.errorMessage = "We found restaurants nearby, but none had fair travel times for both of you. Please try a different address."
+
+                case .noRestaurantsNearby:
+                    self.errorTitle = "No Restaurants Nearby"
+                    self.errorMessage = "We couldn't find restaurants near a fair meeting point. Please try a different address."
+
+                case .searchFailed:
+                    self.errorTitle = "Search Problem"
                     self.errorMessage = "We couldn't find restaurants near your midpoint. Please try again."
                 }
             }
