@@ -6,10 +6,10 @@
 import Foundation
 import CoreLocation
 
-/// SwiftUI-facing wrapper around CLLocationManager. Mirrors the same
-/// permission request and update handling WelcomeViewController used,
-/// and still feeds YelpManager.shared.currentUserLocation as the single
-/// source of truth for the user's location.
+/// SwiftUI-facing wrapper around CLLocationManager. Handles permission
+/// requests and location updates, and feeds
+/// YelpManager.shared.currentUserLocation as the single source of truth
+/// for the user's location.
 final class LocationProvider: NSObject, ObservableObject, CLLocationManagerDelegate {
 
     private let locationManager = CLLocationManager()

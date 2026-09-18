@@ -8,8 +8,7 @@ import CoreLocation
 
 /// Holds only transient UI state for the SwiftUI home screen. The actual
 /// location/midpoint/search state continues to live in YelpManager.shared,
-/// exactly as it did for WelcomeViewController - this does not introduce a
-/// second source of truth.
+/// so this view model does not introduce a second source of truth.
 final class HomeViewModel: ObservableObject {
 
     @Published var addressText: String = ""
@@ -18,8 +17,6 @@ final class HomeViewModel: ObservableObject {
     @Published var errorMessage: String?
     @Published var restaurants: [Restaurant] = []
     @Published var isShowingResults: Bool = false
-
-    weak var navigator: HomeNavigating?
 
     func findAPlace() {
         let trimmedAddress = addressText.trimmingCharacters(in: .whitespacesAndNewlines)

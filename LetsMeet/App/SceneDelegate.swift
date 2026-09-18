@@ -12,9 +12,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
 
-    // Keeps the coordinator alive; HomeViewModel only holds a weak reference to it.
-    private var homeNavigationCoordinator: HomeNavigationCoordinator?
-
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = (scene as? UIWindowScene) else { return }
 
@@ -22,10 +19,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         let hostingController = UIHostingController(rootView: LaunchContainerView(homeViewModel: homeViewModel))
         let navigationController = UINavigationController(rootViewController: hostingController)
         navigationController.setNavigationBarHidden(true, animated: false)
-
-        let coordinator = HomeNavigationCoordinator(navigationController: navigationController)
-        homeViewModel.navigator = coordinator
-        homeNavigationCoordinator = coordinator
 
         let window = UIWindow(windowScene: windowScene)
         window.rootViewController = navigationController
@@ -59,9 +52,6 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // Called as the scene transitions from the foreground to the background.
         // Use this method to save data, release shared resources, and store enough scene-specific state information
         // to restore the scene back to its current state.
-
-        // Save changes in the application's managed object context when the application transitions to the background.
-        (UIApplication.shared.delegate as? AppDelegate)?.saveContext()
     }
 
 

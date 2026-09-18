@@ -108,9 +108,8 @@ struct RestaurantCardView: View {
         return String(format: "%.1f mi", miles)
     }
 
-    /// Preserves the exact existing Direct Me -> Apple Maps behavior from
-    /// DetailViewController.startDirections(address:): same URL scheme, same
-    /// address source (the Yelp display_address joined with spaces).
+    /// Opens Apple Maps with the restaurant's address (the Yelp
+    /// display_address joined with spaces) using the maps.apple.com URL scheme.
     private func openDirections() {
         guard let address = restaurant.location?.display_address.joined(separator: " ") else { return }
         let encodedAddress = address.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""

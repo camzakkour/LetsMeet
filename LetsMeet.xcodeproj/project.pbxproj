@@ -11,7 +11,6 @@
 		0E600E20F8887EB410DBA8A8 /* RestaurantFairnessSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B497EAEAC35199FD46CD8254 /* RestaurantFairnessSelector.swift */; };
 		120242747728C7CEA31827F7 /* HomeMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A525F7F1122F10D3D89EDD76 /* HomeMapView.swift */; };
 		20E1E4C7AD1914259A888DE3 /* RestaurantResultsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E65926C85AD5E7849CC7F3C /* RestaurantResultsSheet.swift */; };
-		2E79EBF2FFA575A0CC26DE3C /* HomeNavigationCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = FB3CEFB0D6EEA75B1C47836A /* HomeNavigationCoordinator.swift */; };
 		2EFB3827F563F3378DA7761D /* GeographicMidpointStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 440A668ABB25C15DB4BA05B7 /* GeographicMidpointStrategy.swift */; };
 		39C65558E06763B1421647B7 /* Color+LetsMeet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A4EC2AFE6897BC9E3D6FBB8 /* Color+LetsMeet.swift */; };
 		5EC6CA632E36414EFAF5B47F /* RestaurantPhotoGalleryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CCF0085A703C668C2ED4455 /* RestaurantPhotoGalleryView.swift */; };
@@ -21,16 +20,9 @@
 		BB171A622AB25E49006CBDD5 /* config.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB171A612AB25E49006CBDD5 /* config.plist */; };
 		BB333966281C9F8E00A2142E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB333965281C9F8E00A2142E /* AppDelegate.swift */; };
 		BB333968281C9F8E00A2142E /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB333967281C9F8E00A2142E /* SceneDelegate.swift */; };
-		BB33396A281C9F8E00A2142E /* WelcomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB333969281C9F8E00A2142E /* WelcomeViewController.swift */; };
-		BB33396D281C9F8E00A2142E /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = BB33396B281C9F8E00A2142E /* Main.storyboard */; };
-		BB333970281C9F8E00A2142E /* LetsMeet.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = BB33396E281C9F8E00A2142E /* LetsMeet.xcdatamodeld */; };
 		BB333972281C9F9000A2142E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BB333971281C9F9000A2142E /* Assets.xcassets */; };
 		BB333975281C9F9000A2142E /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = BB333973281C9F9000A2142E /* LaunchScreen.storyboard */; };
 		BB51EABE283EE105009C4408 /* LocationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB51EABD283EE105009C4408 /* LocationManager.swift */; };
-		BB51EAC1283EE136009C4408 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB51EAC0283EE136009C4408 /* Extensions.swift */; };
-		BB51EAC3283F320B009C4408 /* BusinessCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB51EAC2283F320B009C4408 /* BusinessCell.swift */; };
-		BBA91FF42824630A00127CE4 /* DetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBA91FF32824630A00127CE4 /* DetailViewController.swift */; };
-		BBBF5D1528359C5C00DC55C2 /* AlertController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBBF5D1428359C5C00DC55C2 /* AlertController.swift */; };
 		BBCC94F728246A2400F61C2E /* YelpResults.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBCC94F628246A2400F61C2E /* YelpResults.swift */; };
 		BBCC94F92824837300F61C2E /* YelpManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBCC94F82824837300F61C2E /* YelpManager.swift */; };
 		BBCC94FB2824838200F61C2E /* NetworkConstants.swift in Sources */ = {isa = PBXBuildFile; fileRef = BBCC94FA2824838200F61C2E /* NetworkConstants.swift */; };
@@ -62,22 +54,14 @@
 		BB333962281C9F8E00A2142E /* LetsMeet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LetsMeet.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB333965281C9F8E00A2142E /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		BB333967281C9F8E00A2142E /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
-		BB333969281C9F8E00A2142E /* WelcomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WelcomeViewController.swift; sourceTree = "<group>"; };
-		BB33396C281C9F8E00A2142E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
-		BB33396F281C9F8E00A2142E /* LetsMeet.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = LetsMeet.xcdatamodel; sourceTree = "<group>"; };
 		BB333971281C9F9000A2142E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		BB333974281C9F9000A2142E /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		BB333976281C9F9000A2142E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		BB51EABD283EE105009C4408 /* LocationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationManager.swift; sourceTree = "<group>"; };
-		BB51EAC0283EE136009C4408 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
-		BB51EAC2283F320B009C4408 /* BusinessCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BusinessCell.swift; sourceTree = "<group>"; };
-		BBA91FF32824630A00127CE4 /* DetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DetailViewController.swift; sourceTree = "<group>"; };
-		BBBF5D1428359C5C00DC55C2 /* AlertController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertController.swift; sourceTree = "<group>"; };
 		BBCC94F628246A2400F61C2E /* YelpResults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YelpResults.swift; sourceTree = "<group>"; };
 		BBCC94F82824837300F61C2E /* YelpManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YelpManager.swift; sourceTree = "<group>"; };
 		BBCC94FA2824838200F61C2E /* NetworkConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkConstants.swift; sourceTree = "<group>"; };
 		CBE015D30A49CB0657C08F62 /* LetsMeetLaunchIntro.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LetsMeetLaunchIntro.swift; sourceTree = "<group>"; };
-		FB3CEFB0D6EEA75B1C47836A /* HomeNavigationCoordinator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HomeNavigationCoordinator.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -106,21 +90,65 @@
 			path = Midpoint;
 			sourceTree = "<group>";
 		};
-		81D6CF50804C638D837F729D /* SwiftUI */ = {
+		BB01A001000000000000A001 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				BB333965281C9F8E00A2142E /* AppDelegate.swift */,
+				BB333967281C9F8E00A2142E /* SceneDelegate.swift */,
+			);
+			name = App;
+			path = App;
+			sourceTree = "<group>";
+		};
+		BB01A002000000000000A002 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				BB01A003000000000000A003 /* Launch */,
+				BB01A004000000000000A004 /* Home */,
+				BB01A005000000000000A005 /* Results */,
+			);
+			name = Features;
+			path = Features;
+			sourceTree = "<group>";
+		};
+		BB01A003000000000000A003 /* Launch */ = {
+			isa = PBXGroup;
+			children = (
+				CBE015D30A49CB0657C08F62 /* LetsMeetLaunchIntro.swift */,
+				557300A0751AE65A2735CCC6 /* LetsMeetLogo.swift */,
+			);
+			name = Launch;
+			path = Launch;
+			sourceTree = "<group>";
+		};
+		BB01A004000000000000A004 /* Home */ = {
 			isa = PBXGroup;
 			children = (
 				A525F7F1122F10D3D89EDD76 /* HomeMapView.swift */,
 				1F00E50FB652DC0664BD8B2E /* HomeViewModel.swift */,
-				FB3CEFB0D6EEA75B1C47836A /* HomeNavigationCoordinator.swift */,
-				5A4EC2AFE6897BC9E3D6FBB8 /* Color+LetsMeet.swift */,
-				557300A0751AE65A2735CCC6 /* LetsMeetLogo.swift */,
-				CBE015D30A49CB0657C08F62 /* LetsMeetLaunchIntro.swift */,
-				424C6F06066C1C28C1C9C01F /* RestaurantCardView.swift */,
+			);
+			name = Home;
+			path = Home;
+			sourceTree = "<group>";
+		};
+		BB01A005000000000000A005 /* Results */ = {
+			isa = PBXGroup;
+			children = (
 				9E65926C85AD5E7849CC7F3C /* RestaurantResultsSheet.swift */,
+				424C6F06066C1C28C1C9C01F /* RestaurantCardView.swift */,
 				9CCF0085A703C668C2ED4455 /* RestaurantPhotoGalleryView.swift */,
 			);
-			name = SwiftUI;
-			path = SwiftUI;
+			name = Results;
+			path = Results;
+			sourceTree = "<group>";
+		};
+		BB01A006000000000000A006 /* Utilities */ = {
+			isa = PBXGroup;
+			children = (
+				5A4EC2AFE6897BC9E3D6FBB8 /* Color+LetsMeet.swift */,
+			);
+			name = Utilities;
+			path = Utilities;
 			sourceTree = "<group>";
 		};
 		BB333959281C9F8E00A2142E = {
@@ -142,14 +170,13 @@
 		BB333964281C9F8E00A2142E /* LetsMeet */ = {
 			isa = PBXGroup;
 			children = (
+				BB01A001000000000000A001 /* App */,
+				BB01A002000000000000A002 /* Features */,
 				BB51EABF283EE10B009C4408 /* LocationManager */,
-				BBB9AA3B282081BC00F863BB /* Controller */,
 				BBCC94F5282469F800F61C2E /* Model */,
-				BBB9AA3C282081C700F863BB /* ViewController */,
 				BBB9AA3D282081DA00F863BB /* Storyboards */,
 				BBB9AA3E282081E700F863BB /* Resources */,
-				BB51EAC4283F320F009C4408 /* View */,
-				81D6CF50804C638D837F729D /* SwiftUI */,
+				BB01A006000000000000A006 /* Utilities */,
 			);
 			path = LetsMeet;
 			sourceTree = "<group>";
@@ -158,43 +185,14 @@
 			isa = PBXGroup;
 			children = (
 				BB51EABD283EE105009C4408 /* LocationManager.swift */,
-				BB51EAC0283EE136009C4408 /* Extensions.swift */,
 				334D542B2D4824C3F320ED6A /* LocationProvider.swift */,
 			);
 			path = LocationManager;
 			sourceTree = "<group>";
 		};
-		BB51EAC4283F320F009C4408 /* View */ = {
-			isa = PBXGroup;
-			children = (
-				BB51EAC2283F320B009C4408 /* BusinessCell.swift */,
-			);
-			path = View;
-			sourceTree = "<group>";
-		};
-		BBB9AA3B282081BC00F863BB /* Controller */ = {
-			isa = PBXGroup;
-			children = (
-				BB333965281C9F8E00A2142E /* AppDelegate.swift */,
-				BB333967281C9F8E00A2142E /* SceneDelegate.swift */,
-				BBBF5D1428359C5C00DC55C2 /* AlertController.swift */,
-			);
-			path = Controller;
-			sourceTree = "<group>";
-		};
-		BBB9AA3C282081C700F863BB /* ViewController */ = {
-			isa = PBXGroup;
-			children = (
-				BB333969281C9F8E00A2142E /* WelcomeViewController.swift */,
-				BBA91FF32824630A00127CE4 /* DetailViewController.swift */,
-			);
-			path = ViewController;
-			sourceTree = "<group>";
-		};
 		BBB9AA3D282081DA00F863BB /* Storyboards */ = {
 			isa = PBXGroup;
 			children = (
-				BB33396B281C9F8E00A2142E /* Main.storyboard */,
 				BB333973281C9F9000A2142E /* LaunchScreen.storyboard */,
 			);
 			path = Storyboards;
@@ -205,7 +203,6 @@
 			children = (
 				BB333971281C9F9000A2142E /* Assets.xcassets */,
 				BB333976281C9F9000A2142E /* Info.plist */,
-				BB33396E281C9F8E00A2142E /* LetsMeet.xcdatamodeld */,
 				BB171A612AB25E49006CBDD5 /* config.plist */,
 			);
 			path = Resources;
@@ -283,7 +280,6 @@
 				BB171A622AB25E49006CBDD5 /* config.plist in Resources */,
 				BB333975281C9F9000A2142E /* LaunchScreen.storyboard in Resources */,
 				BB333972281C9F9000A2142E /* Assets.xcassets in Resources */,
-				BB33396D281C9F8E00A2142E /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -295,21 +291,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				BBCC94FB2824838200F61C2E /* NetworkConstants.swift in Sources */,
-				BBBF5D1528359C5C00DC55C2 /* AlertController.swift in Sources */,
 				BB51EABE283EE105009C4408 /* LocationManager.swift in Sources */,
-				BB333970281C9F8E00A2142E /* LetsMeet.xcdatamodeld in Sources */,
-				BB33396A281C9F8E00A2142E /* WelcomeViewController.swift in Sources */,
-				BB51EAC3283F320B009C4408 /* BusinessCell.swift in Sources */,
 				BBCC94F728246A2400F61C2E /* YelpResults.swift in Sources */,
 				BBCC94F92824837300F61C2E /* YelpManager.swift in Sources */,
-				BBA91FF42824630A00127CE4 /* DetailViewController.swift in Sources */,
 				BB333966281C9F8E00A2142E /* AppDelegate.swift in Sources */,
-				BB51EAC1283EE136009C4408 /* Extensions.swift in Sources */,
 				BB333968281C9F8E00A2142E /* SceneDelegate.swift in Sources */,
 				E7716D1CA89CF53E93BB4C91 /* LocationProvider.swift in Sources */,
 				120242747728C7CEA31827F7 /* HomeMapView.swift in Sources */,
 				9AE35DD1FE5F69931546D44F /* HomeViewModel.swift in Sources */,
-				2E79EBF2FFA575A0CC26DE3C /* HomeNavigationCoordinator.swift in Sources */,
 				39C65558E06763B1421647B7 /* Color+LetsMeet.swift in Sources */,
 				F96255B09D5A28ABFAC93591 /* LetsMeetLogo.swift in Sources */,
 				F49A55760DF9FC6493036ECB /* LetsMeetLaunchIntro.swift in Sources */,
@@ -329,14 +318,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXVariantGroup section */
-		BB33396B281C9F8E00A2142E /* Main.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				BB33396C281C9F8E00A2142E /* Base */,
-			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
 		BB333973281C9F9000A2142E /* LaunchScreen.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -481,7 +462,6 @@
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Let's Meet is a location based app. We use your location to meet with your friends in the middle.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
@@ -520,7 +500,6 @@
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Let's Meet is a location based app. We use your location to meet with your friends in the middle.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
-				INFOPLIST_KEY_UIMainStoryboardFile = Main;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
 				IPHONEOS_DEPLOYMENT_TARGET = 16.4;
@@ -565,18 +544,6 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCVersionGroup section */
-		BB33396E281C9F8E00A2142E /* LetsMeet.xcdatamodeld */ = {
-			isa = XCVersionGroup;
-			children = (
-				BB33396F281C9F8E00A2142E /* LetsMeet.xcdatamodel */,
-			);
-			currentVersion = BB33396F281C9F8E00A2142E /* LetsMeet.xcdatamodel */;
-			path = LetsMeet.xcdatamodeld;
-			sourceTree = "<group>";
-			versionGroupType = wrapper.xcdatamodel;
-		};
-/* End XCVersionGroup section */
 	};
 	rootObject = BB33395A281C9F8E00A2142E /* Project object */;
 }
