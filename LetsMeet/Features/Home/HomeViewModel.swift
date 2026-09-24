@@ -5,6 +5,7 @@
 
 import Foundation
 import CoreLocation
+import MapKit
 
 /// Holds only transient UI state for the SwiftUI home screen. The actual
 /// location/midpoint/search state continues to live in YelpManager.shared,
@@ -18,6 +19,14 @@ final class HomeViewModel: ObservableObject {
     @Published var restaurants: [Restaurant] = []
     @Published var isShowingResults: Bool = false
 
+    /// Map visualization state, read from `YelpManager.shared` once a
+    /// search resolves. Reset to nil at the start of every new search so a
+    /// prior search's pin/route/circle can never linger into a new one.
+    @Published var friendCoordinate: CLLocationCoordinate2D?
+    @Published var meetingPointCoordinate: CLLocationCoordinate2D?
+    @Published var searchRadiusMeters: Double?
+    @Published var route: MKRoute?
+
     func findAPlace() {
         let trimmedAddress = addressText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedAddress.isEmpty else {
@@ -27,6 +36,10 @@ final class HomeViewModel: ObservableObject {
         }
 
         isSearching = true
+        friendCoordinate = nil
+        meetingPointCoordinate = nil
+        searchRadiusMeters = nil
+        route = nil
 
         CLGeocoder().geocodeAddressString(trimmedAddress) { [weak self] placemarks, error in
             guard let self = self else { return }
@@ -47,6 +60,7 @@ final class HomeViewModel: ObservableObject {
                 }
 
                 YelpManager.shared.friendLocation = friendLocation
+                self.friendCoordinate = friendLocation.coordinate
                 self.searchForRestaurants(userLocation: userLocation, friendLocation: friendLocation)
             }
         }
@@ -68,6 +82,9 @@ final class HomeViewModel: ObservableObject {
                     YelpManager.shared.restaurants = restaurants
                     self.restaurants = restaurants
                     self.isShowingResults = true
+                    self.meetingPointCoordinate = YelpManager.shared.midPoint?.coordinate
+                    self.searchRadiusMeters = YelpManager.shared.searchRadiusMeters
+                    self.route = YelpManager.shared.route
 
                 case .limitedFairOptions(let restaurants):
                     YelpManager.shared.restaurants = restaurants
@@ -75,6 +92,9 @@ final class HomeViewModel: ObservableObject {
                     self.isShowingResults = true
                     self.errorTitle = "Limited Options"
                     self.errorMessage = "We only found a couple of restaurants with fair travel times for both of you."
+                    self.meetingPointCoordinate = YelpManager.shared.midPoint?.coordinate
+                    self.searchRadiusMeters = YelpManager.shared.searchRadiusMeters
+                    self.route = YelpManager.shared.route
 
                 case .noFairRestaurants:
                     self.errorTitle = "No Fair Options"

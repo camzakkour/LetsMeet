@@ -56,4 +56,40 @@ enum RoutePolylineMath {
         CLLocation(latitude: a.latitude, longitude: a.longitude)
             .distance(from: CLLocation(latitude: b.latitude, longitude: b.longitude))
     }
+
+    /// Splits `polyline` into two polylines at whichever of its vertices is
+    /// geographically nearest to `coordinate` - used to reuse an already-
+    /// fetched A(user)->B(friend) route for visualization (blue user leg +
+    /// orange friend leg) without issuing new `MKDirections` requests.
+    ///
+    /// Finds the nearest vertex by distance rather than requiring exact
+    /// floating-point coordinate equality: `coordinate` is expected to be a
+    /// point this same polyline produced (e.g. via `nearestVertexPoint`),
+    /// but matching by distance keeps this robust to that not holding
+    /// exactly. Never mutates or refetches the route itself.
+    static func split(_ polyline: MKPolyline, at coordinate: CLLocationCoordinate2D) -> (prefix: MKPolyline, suffix: MKPolyline) {
+        let count = polyline.pointCount
+        guard count > 1 else { return (polyline, polyline) }
+
+        let points = Array(UnsafeBufferPointer(start: polyline.points(), count: count))
+        let target = MKMapPoint(coordinate)
+
+        var nearestIndex = 0
+        var nearestDistance = Double.greatestFiniteMagnitude
+        for i in 0..<count {
+            let distance = points[i].distance(to: target)
+            if distance < nearestDistance {
+                nearestDistance = distance
+                nearestIndex = i
+            }
+        }
+
+        let prefixCoordinates = points[0...nearestIndex].map(\.coordinate)
+        let suffixCoordinates = points[nearestIndex..<count].map(\.coordinate)
+
+        return (
+            MKPolyline(coordinates: prefixCoordinates, count: prefixCoordinates.count),
+            MKPolyline(coordinates: suffixCoordinates, count: suffixCoordinates.count)
+        )
+    }
 }

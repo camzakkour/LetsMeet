@@ -7,6 +7,7 @@
 
 import Foundation
 import CoreLocation
+import MapKit
 
 enum YelpManagerError: Error {
     case failedRequestWithError(Error)
@@ -23,6 +24,14 @@ class YelpManager {
     var currentUserLocation: CLLocation?
     var friendLocation: CLLocation?
     var midPoint: CLLocation?
+    /// The already-fetched A(user)->B(friend) route, exposed as-is for map
+    /// visualization. Pure data storage - set by MeetingPlaceFinder, not
+    /// computed or mutated here.
+    var route: MKRoute?
+    /// The final search radius (in meters) used to find `restaurants`,
+    /// exposed as-is for map visualization. Pure data storage - set by
+    /// MeetingPlaceFinder, not computed or mutated here.
+    var searchRadiusMeters: Double?
 
     /// Photos fetched from Business Details, cached by business ID for the
     /// session so scrolling a restaurant card away and back doesn't refetch.

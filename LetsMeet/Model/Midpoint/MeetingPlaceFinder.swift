@@ -5,6 +5,7 @@
 
 import Foundation
 import CoreLocation
+import MapKit
 import os.log
 
 /// Orchestrates a full "fair meeting place" search: derives a road-corridor
@@ -56,9 +57,27 @@ final class MeetingPlaceFinder {
                 friendLocation: friendLocation,
                 diagnostics: region.diagnostics
             ) { outcome in
+                self.updateVisualizationMetadata(region: region)
                 self.logDiagnosticsIfNeeded(region.diagnostics, outcome: outcome)
                 completion(outcome)
             }
+        }
+    }
+
+    /// Exposes already-computed search metadata on `YelpManager.shared` for
+    /// map visualization only - reuses the region's own route and, when
+    /// available, the *final* search round's center/radius rather than the
+    /// initial seed, since corridor shifts or radius expansions may have
+    /// moved the search after that seed was picked. Never recomputes or
+    /// refetches anything.
+    private func updateVisualizationMetadata(region: MeetingRegion) {
+        YelpManager.shared.route = region.corridor?.route
+
+        if let finalRound = region.diagnostics?.searchRounds.last {
+            YelpManager.shared.midPoint = CLLocation(latitude: finalRound.center.latitude, longitude: finalRound.center.longitude)
+            YelpManager.shared.searchRadiusMeters = finalRound.radiusMeters
+        } else {
+            YelpManager.shared.searchRadiusMeters = region.searchRadiusMeters
         }
     }
 
