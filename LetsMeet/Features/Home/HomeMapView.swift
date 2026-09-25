@@ -18,6 +18,11 @@ struct HomeMapView: View {
         )
     )
     @State private var hasCenteredOnUser = false
+    @FocusState private var isAddressFieldFocused: Bool
+    /// Top edge of the on-screen keyboard in screen coordinates, or nil when
+    /// no keyboard is showing. Only used to cap the suggestion dropdown's
+    /// height - the card itself is laid out exactly as before.
+    @State private var keyboardTopY: CGFloat?
     @State private var resultsDetent: PresentationDetent = .large
 
     /// Tall enough to show the full "Restaurants near your midpoint" header
@@ -79,6 +84,13 @@ struct HomeMapView: View {
             }
         }
         .animation(.easeInOut, value: viewModel.isShowingResults)
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillChangeFrameNotification)) { note in
+            guard let frame = note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return }
+            keyboardTopY = frame.minY
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            keyboardTopY = nil
+        }
         .onAppear { locationProvider.requestLocation() }
         .onChange(of: locationProvider.currentCoordinate?.latitude) { _ in
             recenterOnUserIfNeeded()
@@ -226,6 +238,92 @@ struct HomeMapView: View {
             .shadow(color: .black.opacity(0.2), radius: 6, y: 3)
     }
 
+    private static let suggestionRowHeight: CGFloat = 52
+    private static let visibleSuggestionRows = 3
+
+    /// Tight top corners where the dropdown meets the field above it, softer
+    /// bottom corners at its free end. Shared by the background, clip and
+    /// border so they always match.
+    private static let dropdownShape = UnevenRoundedRectangle(
+        topLeadingRadius: 9,
+        bottomLeadingRadius: 20,
+        bottomTrailingRadius: 20,
+        topTrailingRadius: 9,
+        style: .continuous
+    )
+
+    /// Dropdown height: the usual up-to-3 rows, reduced only when the keyboard
+    /// leaves less room below the field. Snaps to whole rows, allowing a small
+    /// peek of the next row as a scroll hint, so no row is left half-hidden
+    /// behind the keyboard.
+    private func dropdownHeight(fieldBottom: CGFloat) -> CGFloat {
+        let row = HomeMapView.suggestionRowHeight
+        let natural = CGFloat(min(viewModel.suggestions.count, HomeMapView.visibleSuggestionRows)) * row
+        guard let keyboardTop = keyboardTopY else { return natural }
+
+        let available = keyboardTop - fieldBottom - 4 - 8
+        if available >= natural { return natural }
+
+        let fullRows = max((available / row).rounded(.down), 1)
+        var height = min(natural, max(available, row))
+        if height - fullRows * row < 14 {
+            height = fullRows * row
+        }
+        return height
+    }
+
+    /// Scrollable dropdown attached under the address field. Height is fixed
+    /// per row (capped at 3 rows) so it doesn't resize with every result
+    /// change once full; extra suggestions scroll.
+    private func suggestionDropdown(height: CGFloat) -> some View {
+        ScrollView {
+            VStack(spacing: 0) {
+                ForEach(Array(viewModel.suggestions.enumerated()), id: \.element.id) { index, suggestion in
+                    Button {
+                        isAddressFieldFocused = false
+                        viewModel.selectSuggestion(suggestion)
+                    } label: {
+                        HStack(spacing: 10) {
+                            Image(systemName: "mappin.circle.fill")
+                                .foregroundColor(LetsMeetColor.orange)
+                                .frame(width: 22)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(suggestion.title)
+                                    .font(.subheadline.weight(.medium))
+                                    .foregroundColor(.primary)
+                                    .lineLimit(1)
+                                if !suggestion.subtitle.isEmpty {
+                                    Text(suggestion.subtitle)
+                                        .font(.caption)
+                                        .foregroundColor(Color(.secondaryLabel))
+                                        .lineLimit(1)
+                                }
+                            }
+                            Spacer(minLength: 0)
+                        }
+                        .padding(.horizontal, 12)
+                        .frame(height: HomeMapView.suggestionRowHeight)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .overlay(alignment: .top) {
+                        if index > 0 {
+                            Divider().padding(.leading, 40)
+                        }
+                    }
+                }
+            }
+        }
+        .frame(height: height)
+        .background(Color(.secondarySystemBackground), in: HomeMapView.dropdownShape)
+        .clipShape(HomeMapView.dropdownShape)
+        .overlay(
+            HomeMapView.dropdownShape
+                .stroke(Color.primary.opacity(0.08), lineWidth: 1)
+        )
+        .shadow(color: .black.opacity(0.18), radius: 8, y: 4)
+    }
+
     private var bottomCard: some View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
@@ -242,10 +340,27 @@ struct HomeMapView: View {
                 TextField("Friend's address", text: $viewModel.addressText)
                     .textFieldStyle(.plain)
                     .autocorrectionDisabled()
+                    .focused($isAddressFieldFocused)
             }
             .padding(12)
             .background(Color(.secondarySystemBackground))
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(alignment: .topLeading) {
+                // Overlays the content below the field instead of adding to
+                // the card's layout, so the card never changes height. The
+                // dropdown's top edge is offset by the field's own measured
+                // height, so it starts just below the field at any size.
+                GeometryReader { field in
+                    if isAddressFieldFocused && !viewModel.suggestions.isEmpty {
+                        suggestionDropdown(height: dropdownHeight(fieldBottom: field.frame(in: .global).maxY))
+                            .offset(y: field.size.height + 4)
+                            .transition(.opacity)
+                    }
+                }
+            }
+            .animation(.easeInOut(duration: 0.15), value: isAddressFieldFocused && !viewModel.suggestions.isEmpty)
+            // Keeps the dropdown (and its taps) above the sibling views below.
+            .zIndex(1)
 
             HStack(spacing: 8) {
                 Image(systemName: "location.fill")
@@ -280,8 +395,9 @@ struct HomeMapView: View {
             .disabled(viewModel.isSearching)
         }
         .padding(20)
-        .background(.regularMaterial)
-        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+        // Background-in-shape rather than clipShape so the suggestion
+        // dropdown isn't clipped where it extends past the card.
+        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 28, style: .continuous))
         .shadow(color: .black.opacity(0.15), radius: 16, y: 6)
         .padding(.horizontal, 16)
         .padding(.bottom, 24)
