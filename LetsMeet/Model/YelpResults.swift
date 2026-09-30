@@ -62,6 +62,19 @@ struct Restaurant: Decodable, Identifiable, Equatable {
     var distance: Double?
     var coordinates: Coordinates?
 
+    /// Set only by `RestaurantFairnessSelector` when it assembles a search's
+    /// final displayed results (`.success`/`.limitedFairOptions`); nil for
+    /// any restaurant that hasn't gone through that assembly, e.g. anything
+    /// freshly decoded from Yelp. Distinguishes a restaurant that passed the
+    /// fairness rule from one that was only successfully ETA-verified and
+    /// included to fill out the display list - being displayed never
+    /// reclassifies a `.verifiedAdditional` restaurant as `.fair`.
+    enum FairnessDisplayStatus: Equatable {
+        case fair
+        case verifiedAdditional
+    }
+    var fairnessDisplayStatus: FairnessDisplayStatus?
+
     enum CodingKeys: String, CodingKey {
         case id
         case name

@@ -122,7 +122,7 @@ struct HomeMapView: View {
             Text(viewModel.errorMessage ?? "")
         }
         .sheet(isPresented: $viewModel.isShowingResults) {
-            RestaurantResultsSheet(restaurants: viewModel.restaurants, isExpanded: resultsDetent == .large)
+            RestaurantResultsSheet(restaurants: viewModel.restaurants, isExpanded: resultsDetent == .large, isSearchInProgress: viewModel.isSearching)
                 .presentationDetents([HomeMapView.peekResultsDetent, .large], selection: $resultsDetent)
                 .presentationDragIndicator(.visible)
                 .presentationBackgroundInteraction(.enabled(upThrough: HomeMapView.peekResultsDetent))

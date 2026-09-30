@@ -23,6 +23,12 @@ struct RestaurantResultsSheet: View {
     /// inconsistent depending on prior scroll position.
     let isExpanded: Bool
 
+    /// Whether the search that produced `restaurants` is still refining
+    /// results in the background (progressive delivery). Drives a subtle
+    /// trailing loading row - removed the instant the search reaches its
+    /// terminal outcome, regardless of how it resolves.
+    let isSearchInProgress: Bool
+
     var body: some View {
         VStack(spacing: 0) {
             header
@@ -42,11 +48,25 @@ struct RestaurantResultsSheet: View {
                 ForEach(restaurants) { restaurant in
                     RestaurantCardView(restaurant: restaurant)
                 }
+                if isSearchInProgress {
+                    loadingRow
+                }
             }
             .padding(.horizontal, 16)
             .padding(.bottom, 24)
         }
         .scrollDisabled(!isExpanded)
+    }
+
+    private var loadingRow: some View {
+        HStack(spacing: 8) {
+            ProgressView()
+            Text("Finding more options…")
+                .font(.subheadline)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
     }
 
     private var header: some View {

@@ -84,10 +84,73 @@ enum MidpointFairnessConfig {
     /// so candidates aren't clustered in one tiny area.
     static let diversityMinSeparationMeters: Double = 250
 
-    /// Maximum number of restaurant ETA requests in flight at once, so a
-    /// 10-restaurant shortlist doesn't burst 20 simultaneous MKDirections
-    /// requests.
-    static let etaConcurrencyBatchSize: Int = 5
+    /// Number of restaurant candidates verified concurrently during
+    /// restaurant ETA verification. Each candidate consumes up to 2
+    /// simultaneous `MKDirections` calls (user leg + friend leg), so the
+    /// real concurrent-request ceiling is `restaurantVerificationConcurrency
+    /// * 2`.
+    ///
+    /// Restored to 3 candidates (6 concurrent calls) after a controlled
+    /// low-concurrency experiment (1 candidate/2 concurrent calls) and a
+    /// separate quiet-interval recovery experiment both showed that the
+    /// intermittent, broad `MKErrorDomain` code 4 "Directions Not Available"
+    /// failure bursts observed in production are not caused or prevented by
+    /// request concurrency: the same broad-failure signature recurred at
+    /// concurrency 1, and recovered after a quiet interval with no
+    /// concurrency change at all. Running verification one candidate at a
+    /// time only added user-visible search latency without measurably
+    /// improving reliability, so this reverts to the pre-experiment
+    /// production value. (5 candidates/10 concurrent calls, tried earlier
+    /// still, reliably triggered failures under load and was reduced from
+    /// for the same reason.)
+    static let restaurantVerificationConcurrency: Int = 3
+
+    /// The total number of attempts a single ETA leg (user->candidate or
+    /// friend->candidate) may consume across an ENTIRE search - the primary
+    /// verification pass and the one bounded recovery pass in
+    /// `verifyBatched` combined. This is a single, shared, cross-pass budget
+    /// by design: a leg that already spent an attempt in the primary pass
+    /// and failed transiently gets exactly one more attempt, in recovery -
+    /// never a fresh, independently-reset budget just for entering
+    /// recovery. (Previously the primary pass had its own internal retry on
+    /// top of a *separate* recovery-pass retry, which could give a single
+    /// leg up to 4 total attempts and was the actual cause of a ~71-request
+    /// failed search versus a ~23-request healthy one for the same
+    /// 10-restaurant shortlist - see `RestaurantFairnessSelector`'s
+    /// `LegSchedulerState`.)
+    static let maxAttemptsPerLeg: Int = 2
+
+    /// Fixed pause inserted between consecutive restaurant-verification
+    /// batches (on top of the bounded `restaurantVerificationConcurrency`
+    /// ceiling within a single batch), so verification doesn't fire the next
+    /// batch the instant the previous one's last request lands. This is the
+    /// "deliberate pacing" complement to bounded concurrency - it spreads a
+    /// shortlist's total request volume out over time rather than only
+    /// capping how many requests are in flight at once. Unchanged from its
+    /// value throughout the concurrency experiment above: with
+    /// `restaurantVerificationConcurrency` restored to 3, this is once again
+    /// an inter-BATCH pause (roughly once per 3 restaurants) rather than the
+    /// inter-CANDIDATE pause it became at concurrency 1.
+    static let interCandidatePacingSeconds: Double = 0.3
+
+    /// After a full primary verification pass still leaves some legs
+    /// pending (see `maxAttemptsPerLeg`), exactly ONE additional batch-level
+    /// recovery pass is attempted over just those restaurants, after this
+    /// longer backoff. A longer pause than the primary pass's own
+    /// inter-batch pacing gives a broader/correlated MapKit failure window
+    /// more of a chance to clear before the leg's final attempt. Bounded to
+    /// a single pass (never recursive) so a systemic outage still
+    /// terminates in a fixed, small number of requests rather than
+    /// retrying forever.
+    static let batchRecoveryDelaySeconds: Double = 1.5
+
+    /// A search round's ETA-verification sample is only trusted as evidence
+    /// of genuine unfairness when at least this fraction of its shortlist
+    /// produced a full bidirectional ETA pair (after retries). Below this
+    /// fraction, failed ETA requests - not real unfairness - are assumed to
+    /// explain a low pass count, so the round must not trigger an
+    /// unfairness-driven radius expansion or corridor shift.
+    static let minReliableETAVerificationFraction: Double = 0.5
 
     /// Below this many raw Yelp results, a round is treated as sparse
     /// (shift the search region) rather than merely unfair (expand it).
@@ -113,4 +176,16 @@ enum MidpointFairnessConfig {
     /// Minimum number of fairness-verified restaurants required for a
     /// normal-success outcome before bounded search attempts are exhausted.
     static let minViableRestaurants: Int = 3
+
+    /// Maximum number of restaurants ever attached to a `.success` or
+    /// `.limitedFairOptions` outcome for display. Deliberately a distinct
+    /// constant from `restaurantShortlistSize`, even though both are
+    /// currently 10 - one bounds how many candidates are sent to ETA
+    /// verification per round, the other bounds how many already-verified
+    /// results are shown to the user across all rounds combined. Fairness-
+    /// verified restaurants always fill these slots first; any remaining
+    /// slots are filled with successfully-ETA-verified-but-unfair
+    /// restaurants, ranked by closeness to passing the fairness rule. Never
+    /// filled with unverified restaurants.
+    static let maxDisplayedRestaurants: Int = 10
 }

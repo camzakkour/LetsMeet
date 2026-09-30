@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		08DAFE605DDD3FBE1C678434 /* MeetingRegion.swift in Sources */ = {isa = PBXBuildFile; fileRef = 17CCC894A24A3DCD7377EEDB /* MeetingRegion.swift */; };
 		0E600E20F8887EB410DBA8A8 /* RestaurantFairnessSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B497EAEAC35199FD46CD8254 /* RestaurantFairnessSelector.swift */; };
+		3FA8E66FF0424598B006D415 /* ETAVerificationDecision.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6734130BD8E4E9D8BA43718 /* ETAVerificationDecision.swift */; };
+		4A2BFBC59B614D66A2DB4629 /* LegSchedulerState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C7BA6C7891C4E71BEBC9C1B /* LegSchedulerState.swift */; };
 		120242747728C7CEA31827F7 /* HomeMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A525F7F1122F10D3D89EDD76 /* HomeMapView.swift */; };
 		20E1E4C7AD1914259A888DE3 /* RestaurantResultsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E65926C85AD5E7849CC7F3C /* RestaurantResultsSheet.swift */; };
 		2EFB3827F563F3378DA7761D /* GeographicMidpointStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 440A668ABB25C15DB4BA05B7 /* GeographicMidpointStrategy.swift */; };
@@ -52,6 +54,8 @@
 		A2450844EDDF184164A8113A /* MidpointFairnessConfig.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MidpointFairnessConfig.swift; sourceTree = "<group>"; };
 		A525F7F1122F10D3D89EDD76 /* HomeMapView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = HomeMapView.swift; sourceTree = "<group>"; };
 		B497EAEAC35199FD46CD8254 /* RestaurantFairnessSelector.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RestaurantFairnessSelector.swift; sourceTree = "<group>"; };
+		E6734130BD8E4E9D8BA43718 /* ETAVerificationDecision.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ETAVerificationDecision.swift; sourceTree = "<group>"; };
+		1C7BA6C7891C4E71BEBC9C1B /* LegSchedulerState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LegSchedulerState.swift; sourceTree = "<group>"; };
 		BB171A612AB25E49006CBDD5 /* config.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = config.plist; sourceTree = "<group>"; };
 		BB333962281C9F8E00A2142E /* LetsMeet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LetsMeet.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB333965281C9F8E00A2142E /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -85,6 +89,8 @@
 				440A668ABB25C15DB4BA05B7 /* GeographicMidpointStrategy.swift */,
 				09C426D915474A0AA91179E4 /* RouteSeededMidpointStrategy.swift */,
 				9401900B24E14F09840EC1BF /* RoutePolylineMath.swift */,
+				E6734130BD8E4E9D8BA43718 /* ETAVerificationDecision.swift */,
+				1C7BA6C7891C4E71BEBC9C1B /* LegSchedulerState.swift */,
 				B497EAEAC35199FD46CD8254 /* RestaurantFairnessSelector.swift */,
 				7B9C15422793405AA06DA412 /* MeetingPlaceFinder.swift */,
 			);
@@ -314,6 +320,8 @@
 				2EFB3827F563F3378DA7761D /* GeographicMidpointStrategy.swift in Sources */,
 				C5EFA4E2ABB6467C812BACA2 /* RouteSeededMidpointStrategy.swift in Sources */,
 				BA0A85303D1D4132B8B01211 /* RoutePolylineMath.swift in Sources */,
+				3FA8E66FF0424598B006D415 /* ETAVerificationDecision.swift in Sources */,
+				4A2BFBC59B614D66A2DB4629 /* LegSchedulerState.swift in Sources */,
 				0E600E20F8887EB410DBA8A8 /* RestaurantFairnessSelector.swift in Sources */,
 				B0FF834701DE6DAB9048004B /* MeetingPlaceFinder.swift in Sources */,
 			);

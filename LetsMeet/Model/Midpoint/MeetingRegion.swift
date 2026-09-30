@@ -35,7 +35,40 @@ struct SearchRoundDiagnostics {
     /// distinct from `passingFairnessCount` so "0 restaurants were fair" and
     /// "0 restaurants could be verified" never collapse into one number.
     let etaFailedCount: Int
+    /// Of the restaurants that DID resolve a full ETA pair this round, how
+    /// many passed fairness. Named `passingFairnessCount` for compatibility
+    /// with existing logging; always a subset of `etaVerifiedCount`, never
+    /// of `etaAttemptedCount`.
     let passingFairnessCount: Int
+    /// Of the restaurants that DID resolve a full ETA pair this round, how
+    /// many failed fairness - i.e. `etaVerifiedCount - passingFairnessCount`,
+    /// kept explicit so "unfair" and "unverified" are never conflated when
+    /// reading diagnostics.
+    let verifiedUnfairCount: Int
+    /// Whether this round's ETA-verification sample was trusted as evidence
+    /// of genuine unfairness (see
+    /// `MidpointFairnessConfig.minReliableETAVerificationFraction`). False
+    /// means most of the shortlist failed ETA verification, so a low
+    /// `passingFairnessCount` here must not be read as "this area is
+    /// unfair" and must not drive a radius expansion or corridor shift.
+    let reliable: Bool
+}
+
+/// Debug-only record of a single ETA-leg retry attempt, issued because the
+/// first attempt for that leg failed with what looked like a transient
+/// MapKit error. Kept separate from `MapKitFailureRecord`, which is reserved
+/// for a leg's *terminal* (non-retried-further) failure, so a retry that
+/// eventually succeeded doesn't read as an unresolved failure.
+struct ETARetryDiagnostics {
+    let restaurantID: String
+    let side: MapKitFailureRecord.Side
+    /// 1-based index of this retry (1 = first retry, i.e. the second overall
+    /// attempt for this leg).
+    let retryAttemptNumber: Int
+    let delaySeconds: Double
+    let priorErrorDomain: String?
+    let priorErrorCode: Int?
+    let priorErrorDescription: String
 }
 
 /// Debug-only record of one MapKit (MKDirections) request that failed,
@@ -167,6 +200,11 @@ struct CorridorDirectionDiagnostics {
 /// run. A reference type so each stage can append to the same instance as
 /// the search progresses. Never consulted by production logic.
 final class MidpointDiagnostics {
+    /// Short unique ID generated once per `HomeViewModel.findAPlace()`
+    /// invocation and threaded through the whole pipeline, so console output
+    /// from overlapping or sequential searches can be told apart. Diagnostic
+    /// use only - never consulted by production control flow.
+    let searchID: String
     let originalGeographicMidpoint: CLLocationCoordinate2D
 
     // MARK: Route seed stage
@@ -198,8 +236,29 @@ final class MidpointDiagnostics {
     /// seed ETA, restaurant ETA) - richer diagnostics only, never consulted
     /// by production control flow and never used to fabricate an ETA.
     var mapKitFailures: [MapKitFailureRecord] = []
+    /// Every individual ETA-leg retry attempt issued for a transient MapKit
+    /// failure. Diagnostic only - never consulted by production control flow.
+    var etaRetries: [ETARetryDiagnostics] = []
 
-    init(originalGeographicMidpoint: CLLocationCoordinate2D) {
+    #if DEBUG
+    // MARK: - Timing instrumentation (profiling only)
+    //
+    // Wall-clock durations for pipeline stages that share this diagnostics
+    // instance, captured with CFAbsoluteTimeGetCurrent() at the natural
+    // start/end of each stage. Purely additive bookkeeping for the Session 9
+    // latency investigation - never read by any production decision (round
+    // stopping, fairness, retries, concurrency all remain driven entirely by
+    // the existing non-timing fields above). Yelp/shortlist/ETA-verification
+    // durations are running totals because a search may run multiple rounds.
+    var routeDuration: TimeInterval?
+    var midpointCorrectionDuration: TimeInterval?
+    var yelpTotalDuration: TimeInterval = 0
+    var shortlistTotalDuration: TimeInterval = 0
+    var etaVerificationTotalDuration: TimeInterval = 0
+    #endif
+
+    init(searchID: String, originalGeographicMidpoint: CLLocationCoordinate2D) {
+        self.searchID = searchID
         self.originalGeographicMidpoint = originalGeographicMidpoint
     }
 }
@@ -252,6 +311,13 @@ enum MeetingPlaceOutcome {
     case noRestaurantsNearby
     /// The Yelp request itself failed (network/decoding) - not a fairness result.
     case searchFailed(YelpManagerError)
+    /// Yelp returned restaurants, but too many bidirectional ETA requests
+    /// failed (even after bounded retries) to reliably verify fairness for
+    /// any of them. Distinct from `.noFairRestaurants`, which means
+    /// restaurants WERE verified and none passed - this means verification
+    /// itself was unreliable, most likely a transient MapKit outage, so it
+    /// must never be reported to the user as "no fair restaurants."
+    case etaVerificationUnavailable
 }
 
 /// Common seam for anything that can produce a `MeetingRegion` from two
@@ -262,6 +328,7 @@ protocol MidpointStrategy {
     func findMeetingRegion(
         userLocation: CLLocation,
         friendLocation: CLLocation,
+        searchID: String,
         completion: @escaping (MeetingRegion) -> Void
     )
 }

@@ -6,6 +6,7 @@
 import Foundation
 import CoreLocation
 import MapKit
+import os.log
 
 /// V2 "fair region" strategy: rather than searching for one mathematically
 /// perfect midpoint, this derives an approximate road-corridor seed from a
@@ -34,6 +35,10 @@ import MapKit
 /// check before being called fair.
 final class RouteSeededMidpointStrategy: MidpointStrategy {
 
+    #if DEBUG
+    private static let logger = Logger(subsystem: "com.letsmeet.app", category: "Session9")
+    #endif
+
     private let maxRouteRetries = 1
 
     /// One route-seed candidate evaluated during the correction loop -
@@ -50,18 +55,39 @@ final class RouteSeededMidpointStrategy: MidpointStrategy {
     func findMeetingRegion(
         userLocation: CLLocation,
         friendLocation: CLLocation,
+        searchID: String,
         completion: @escaping (MeetingRegion) -> Void
     ) {
         let originalMidpoint = LocationUtility.shared.geographicMidpoint(
             betweenCoordinates: [userLocation.coordinate, friendLocation.coordinate]
         )
-        let diagnostics = MidpointDiagnostics(originalGeographicMidpoint: originalMidpoint)
+        let diagnostics = MidpointDiagnostics(searchID: searchID, originalGeographicMidpoint: originalMidpoint)
+
+        #if DEBUG
+        Self.logger.log("""
+        [S9][\(searchID)] route request START: \
+        user=(\(userLocation.coordinate.latitude), \(userLocation.coordinate.longitude)) \
+        friend=(\(friendLocation.coordinate.latitude), \(friendLocation.coordinate.longitude))
+        """)
+        #endif
+
+        #if DEBUG
+        let routeStageStart = CFAbsoluteTimeGetCurrent()
+        #endif
 
         requestRoute(from: userLocation, to: friendLocation) { [weak self] route, error in
             guard let self = self else { return }
             diagnostics.mapKitRequestCount += 1
+            #if DEBUG
+            diagnostics.routeDuration = CFAbsoluteTimeGetCurrent() - routeStageStart
+            let correctionsStageStart = CFAbsoluteTimeGetCurrent()
+            #endif
 
             guard let route = route else {
+                #if DEBUG
+                Self.logger.log("[S9][\(searchID)] route request FAILED: \(error?.localizedDescription ?? "unknown error")")
+                Self.logger.log("[Timing][S9][\(searchID)] route request took \(diagnostics.routeDuration ?? -1)s (failed)")
+                #endif
                 diagnostics.routeSeedSucceeded = false
                 diagnostics.mapKitFailures.append(
                     MapKitFailureRecord(stage: .route, side: nil, restaurantID: nil, error: error)
@@ -75,6 +101,14 @@ final class RouteSeededMidpointStrategy: MidpointStrategy {
                 return
             }
 
+            #if DEBUG
+            Self.logger.log("""
+            [S9][\(searchID)] route request COMPLETED: distanceMeters=\(route.distance) \
+            expectedTravelTimeSeconds=\(route.expectedTravelTime)
+            """)
+            Self.logger.log("[Timing][S9][\(searchID)] route request took \(diagnostics.routeDuration ?? -1)s")
+            #endif
+
             diagnostics.routeSeedSucceeded = true
             diagnostics.routeDistanceMeters = route.distance
 
@@ -84,6 +118,10 @@ final class RouteSeededMidpointStrategy: MidpointStrategy {
                 friendLocation: friendLocation,
                 diagnostics: diagnostics
             ) { finalFraction, finalCoordinate in
+                #if DEBUG
+                diagnostics.midpointCorrectionDuration = CFAbsoluteTimeGetCurrent() - correctionsStageStart
+                Self.logger.log("[Timing][S9][\(searchID)] midpoint corrections took \(diagnostics.midpointCorrectionDuration ?? -1)s")
+                #endif
                 self.finish(
                     center: finalCoordinate,
                     seedFraction: finalFraction,
@@ -114,11 +152,21 @@ final class RouteSeededMidpointStrategy: MidpointStrategy {
         let initialCoordinate = RoutePolylineMath.nearestVertexPoint(atFraction: initialFraction, along: route.polyline)
         diagnostics.initialSeedCoordinate = initialCoordinate
 
+        #if DEBUG
+        Self.logger.log("""
+        [S9][\(diagnostics.searchID)] initial 50% route seed: \
+        coordinate=(\(initialCoordinate.latitude), \(initialCoordinate.longitude))
+        """)
+        #endif
+
         etaPair(for: initialCoordinate, userLocation: userLocation, friendLocation: friendLocation, diagnostics: diagnostics) { [weak self] pair in
             guard let self = self else { return }
             diagnostics.mapKitRequestCount += 2
 
             guard let (userETA, friendETA) = pair else {
+                #if DEBUG
+                Self.logger.log("[S9][\(diagnostics.searchID)] initial seed ETA check FAILED (both legs)")
+                #endif
                 // Seed ETA check failed - the seed is still usable as a
                 // search origin (restaurant-level ETAs are what actually
                 // matter), it just can't be judged or corrected.
@@ -136,6 +184,15 @@ final class RouteSeededMidpointStrategy: MidpointStrategy {
             diagnostics.initialSeedETAs = (userETA, friendETA)
             let initialCandidate = SeedCandidate(fraction: initialFraction, coordinate: initialCoordinate, userETA: userETA, friendETA: friendETA)
             let tolerance = MidpointFairnessConfig.fairnessTolerance(forLongerETA: max(userETA, friendETA))
+
+            #if DEBUG
+            Self.logger.log("""
+            [S9][\(diagnostics.searchID)] initial seed ETA: userToSeed=\(userETA)s friendToSeed=\(friendETA)s \
+            diff=\(initialCandidate.diff)s tolerance=\(tolerance)s \
+            \(initialCandidate.diff <= tolerance ? "WITHIN TOLERANCE" : "OUTSIDE TOLERANCE - correction will be attempted")
+            """)
+            #endif
+
             diagnostics.seedCandidates.append(
                 SeedCandidateDiagnostics(
                     attemptIndex: 0, fraction: initialFraction, coordinate: initialCoordinate,
@@ -196,6 +253,13 @@ final class RouteSeededMidpointStrategy: MidpointStrategy {
         let candidateCoordinate = RoutePolylineMath.nearestVertexPoint(atFraction: candidateFraction, along: route.polyline)
         let movement = RoutePolylineMath.metersBetween(candidateCoordinate, previous.coordinate)
 
+        #if DEBUG
+        Self.logger.log("""
+        [S9][\(diagnostics.searchID)] seed correction attempt \(attemptIndex): fraction=\(candidateFraction) \
+        coordinate=(\(candidateCoordinate.latitude), \(candidateCoordinate.longitude)) movementFromPreviousMeters=\(movement)
+        """)
+        #endif
+
         guard movement >= MidpointFairnessConfig.minMeaningfulMovementMeters else {
             diagnostics.seedCandidates.append(
                 SeedCandidateDiagnostics(
@@ -216,6 +280,9 @@ final class RouteSeededMidpointStrategy: MidpointStrategy {
             diagnostics.mapKitRequestCount += 2
 
             guard let (userETA, friendETA) = pair else {
+                #if DEBUG
+                Self.logger.log("[S9][\(diagnostics.searchID)] seed correction attempt \(attemptIndex) ETA check FAILED")
+                #endif
                 diagnostics.seedCandidates.append(
                     SeedCandidateDiagnostics(
                         attemptIndex: attemptIndex, fraction: candidateFraction, coordinate: candidateCoordinate,
@@ -232,6 +299,15 @@ final class RouteSeededMidpointStrategy: MidpointStrategy {
             let tolerance = MidpointFairnessConfig.fairnessTolerance(forLongerETA: max(userETA, friendETA))
             let becameBest = candidate.diff < best.diff
             let newBest = becameBest ? candidate : best
+
+            #if DEBUG
+            Self.logger.log("""
+            [S9][\(diagnostics.searchID)] seed correction attempt \(attemptIndex) result: \
+            correctedSeedCoordinate=(\(candidateCoordinate.latitude), \(candidateCoordinate.longitude)) \
+            userToSeed=\(userETA)s friendToSeed=\(friendETA)s diff=\(candidate.diff)s tolerance=\(tolerance)s \
+            becameBest=\(becameBest)
+            """)
+            #endif
 
             diagnostics.seedCandidates.append(
                 SeedCandidateDiagnostics(
@@ -285,6 +361,9 @@ final class RouteSeededMidpointStrategy: MidpointStrategy {
         request.requestsAlternateRoutes = false
 
         MKDirections(request: request).calculate { [weak self] response, error in
+            #if DEBUG
+            Self.logger.log("[S9] RouteSeededMidpointStrategy.requestRoute completion thread: isMainThread=\(Thread.isMainThread) attempt=\(attempt)")
+            #endif
             if let route = response?.routes.first {
                 completion(route, nil)
                 return
@@ -352,6 +431,9 @@ final class RouteSeededMidpointStrategy: MidpointStrategy {
         request.transportType = .automobile
 
         MKDirections(request: request).calculateETA { response, error in
+            #if DEBUG
+            Self.logger.log("[S9] RouteSeededMidpointStrategy.requestETA completion thread: isMainThread=\(Thread.isMainThread)")
+            #endif
             if let response = response {
                 completion(.success(response.expectedTravelTime))
             } else {
@@ -374,6 +456,14 @@ final class RouteSeededMidpointStrategy: MidpointStrategy {
 
         let radius = MidpointFairnessConfig.searchRadius(forRouteDistance: route.distance)
         diagnostics.searchRadiusMeters = radius
+
+        #if DEBUG
+        Self.logger.log("""
+        [S9][\(diagnostics.searchID)] FINAL seed used for Yelp search: \
+        coordinate=(\(center.latitude), \(center.longitude)) radiusMeters=\(radius) \
+        seedFraction=\(seedFraction) trafficAware=true
+        """)
+        #endif
 
         completion(
             MeetingRegion(
@@ -401,6 +491,13 @@ final class RouteSeededMidpointStrategy: MidpointStrategy {
         diagnostics.usedTrafficAwareRouting = false
         diagnostics.selectedCenter = center
         diagnostics.searchRadiusMeters = radius
+
+        #if DEBUG
+        Self.logger.log("""
+        [S9][\(diagnostics.searchID)] FINAL seed used for Yelp search (geographic fallback, route failed): \
+        coordinate=(\(center.latitude), \(center.longitude)) radiusMeters=\(radius) trafficAware=false
+        """)
+        #endif
 
         completion(
             MeetingRegion(
