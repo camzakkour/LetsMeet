@@ -29,6 +29,16 @@ struct RestaurantResultsSheet: View {
     /// terminal outcome, regardless of how it resolves.
     let isSearchInProgress: Bool
 
+    /// Which restaurant's expanded ("More Info") section is open, if any -
+    /// at most one at a time. Deliberately NOT reset when `isExpanded`
+    /// toggles (the sheet's own peek/large detent): collapsing the sheet to
+    /// look at the map and reopening it restores the same expanded card -
+    /// its content is simply clipped out of view while peeked, same as the
+    /// rest of this sheet's content. This View's identity is stable across
+    /// those detent changes (same call site in HomeMapView's `.sheet`), so
+    /// plain `@State` already persists correctly without extra plumbing.
+    @State private var expandedRestaurantID: String?
+
     var body: some View {
         VStack(spacing: 0) {
             header
@@ -46,7 +56,11 @@ struct RestaurantResultsSheet: View {
         ScrollView {
             LazyVStack(spacing: 16) {
                 ForEach(restaurants) { restaurant in
-                    RestaurantCardView(restaurant: restaurant)
+                    RestaurantCardView(
+                        restaurant: restaurant,
+                        isExpanded: expandedRestaurantID == restaurant.id,
+                        onToggleExpand: { toggleExpansion(for: restaurant.id) }
+                    )
                 }
                 if isSearchInProgress {
                     loadingRow
@@ -56,6 +70,10 @@ struct RestaurantResultsSheet: View {
             .padding(.bottom, 24)
         }
         .scrollDisabled(!isExpanded)
+    }
+
+    private func toggleExpansion(for id: String) {
+        expandedRestaurantID = (expandedRestaurantID == id) ? nil : id
     }
 
     private var loadingRow: some View {

@@ -33,6 +33,11 @@ final class LegSchedulerState {
     private final class RestaurantProgress {
         var userETA: TimeInterval?
         var friendETA: TimeInterval?
+        // Route distance (meters), recorded alongside ETA from the same
+        // MapKit route result - not a separate request. Nil whenever the
+        // corresponding ETA is nil.
+        var userDistance: Double?
+        var friendDistance: Double?
         var userAttempts: Int = 0
         var friendAttempts: Int = 0
         // Set false the moment a leg fails with a non-transient error - such
@@ -121,8 +126,12 @@ final class LegSchedulerState {
         }
     }
 
-    func recordUserSuccess(_ id: String, eta: TimeInterval) { withState { $0[id]?.userETA = eta } }
-    func recordFriendSuccess(_ id: String, eta: TimeInterval) { withState { $0[id]?.friendETA = eta } }
+    func recordUserSuccess(_ id: String, eta: TimeInterval, distance: Double? = nil) {
+        withState { $0[id]?.userETA = eta; $0[id]?.userDistance = distance }
+    }
+    func recordFriendSuccess(_ id: String, eta: TimeInterval, distance: Double? = nil) {
+        withState { $0[id]?.friendETA = eta; $0[id]?.friendDistance = distance }
+    }
 
     func recordUserFailure(_ id: String, transient: Bool) { withState { $0[id]?.userEligible = transient } }
     func recordFriendFailure(_ id: String, transient: Bool) { withState { $0[id]?.friendEligible = transient } }
@@ -140,6 +149,21 @@ final class LegSchedulerState {
             var out: [String: (userETA: TimeInterval, friendETA: TimeInterval)] = [:]
             for (id, p) in progress {
                 if let u = p.userETA, let f = p.friendETA {
+                    out[id] = (u, f)
+                }
+            }
+            return out
+        }
+    }
+
+    /// Route distances (meters) for display only - never consulted by any
+    /// fairness decision. Only includes a restaurant once both legs' routes
+    /// resolved with a distance.
+    func verifiedDistances() -> [String: (userDistance: Double, friendDistance: Double)] {
+        withState { progress in
+            var out: [String: (userDistance: Double, friendDistance: Double)] = [:]
+            for (id, p) in progress {
+                if let u = p.userDistance, let f = p.friendDistance {
                     out[id] = (u, f)
                 }
             }

@@ -75,6 +75,20 @@ struct Restaurant: Decodable, Identifiable, Equatable {
     }
     var fairnessDisplayStatus: FairnessDisplayStatus?
 
+    /// Real bidirectional travel info for the decision card, stamped on by
+    /// `ETAVerificationDecision.buildDisplayList` from the same MapKit route
+    /// results already gathered during fairness verification - never
+    /// recomputed for display. Nil for any restaurant that hasn't gone
+    /// through that assembly, or if one leg's route never resolved.
+    var travelInfo: TravelInfo?
+
+    struct TravelInfo: Equatable {
+        var userETA: TimeInterval
+        var userDistanceMeters: Double
+        var friendETA: TimeInterval
+        var friendDistanceMeters: Double
+    }
+
     enum CodingKeys: String, CodingKey {
         case id
         case name
@@ -132,9 +146,22 @@ struct Categories: Decodable, Equatable {
     var title: String
 }
 
-/// Decodes only the field we need from Yelp's Business Details response
-/// (GET /v3/businesses/{id}) - the multi-photo gallery source, distinct
-/// from the single image_url Business Search already provides.
+/// Decodes the fields we need from Yelp's Business Details response
+/// (GET /v3/businesses/{id}): the multi-photo gallery (distinct from the
+/// single image_url Business Search already provides), plus phone and the
+/// Yelp business page URL - both already present on this same response, so
+/// surfacing them on the decision card costs no additional request. Yelp's
+/// Business Details does not provide the restaurant's own independent
+/// website, only its Yelp page (`url`); that field must never be presented
+/// as the restaurant's website.
 struct BusinessDetails: Decodable {
     var photos: [URL]
+    var displayPhone: String?
+    var yelpURL: URL?
+
+    enum CodingKeys: String, CodingKey {
+        case photos
+        case displayPhone = "display_phone"
+        case yelpURL = "url"
+    }
 }

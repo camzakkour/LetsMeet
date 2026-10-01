@@ -239,18 +239,44 @@ enum ETAVerificationDecision {
         verifiedUnfair: [Restaurant],
         etaCache: [String: (userETA: TimeInterval, friendETA: TimeInterval)],
         yelpOrderIndex: [String: Int],
-        maxDisplayed: Int = MidpointFairnessConfig.maxDisplayedRestaurants
+        maxDisplayed: Int = MidpointFairnessConfig.maxDisplayedRestaurants,
+        distanceCache: [String: (userDistance: Double, friendDistance: Double)] = [:]
     ) -> [Restaurant] {
         var cappedFair = Array(fair.prefix(maxDisplayed))
-        for index in cappedFair.indices { cappedFair[index].fairnessDisplayStatus = .fair }
+        for index in cappedFair.indices {
+            cappedFair[index].fairnessDisplayStatus = .fair
+            cappedFair[index].travelInfo = travelInfo(for: cappedFair[index], etaCache: etaCache, distanceCache: distanceCache)
+        }
 
         let remainingSlots = max(0, maxDisplayed - cappedFair.count)
         guard remainingSlots > 0 else { return cappedFair }
 
         let ranked = rankAdditionalOptions(verifiedUnfair: verifiedUnfair, etaCache: etaCache, yelpOrderIndex: yelpOrderIndex)
         var additionalFill = Array(ranked.prefix(remainingSlots))
-        for index in additionalFill.indices { additionalFill[index].fairnessDisplayStatus = .verifiedAdditional }
+        for index in additionalFill.indices {
+            additionalFill[index].fairnessDisplayStatus = .verifiedAdditional
+            additionalFill[index].travelInfo = travelInfo(for: additionalFill[index], etaCache: etaCache, distanceCache: distanceCache)
+        }
 
         return cappedFair + additionalFill
+    }
+
+    /// Assembles a restaurant's display-only travel info from the ETA/
+    /// distance values already gathered during fairness verification. Nil
+    /// when no cached ETA pair exists, or when a distance never resolved for
+    /// one of the two legs (the restaurant still displays - only the travel
+    /// block is omitted).
+    private static func travelInfo(
+        for restaurant: Restaurant,
+        etaCache: [String: (userETA: TimeInterval, friendETA: TimeInterval)],
+        distanceCache: [String: (userDistance: Double, friendDistance: Double)]
+    ) -> Restaurant.TravelInfo? {
+        guard let etas = etaCache[restaurant.id], let distances = distanceCache[restaurant.id] else { return nil }
+        return Restaurant.TravelInfo(
+            userETA: etas.userETA,
+            userDistanceMeters: distances.userDistance,
+            friendETA: etas.friendETA,
+            friendDistanceMeters: distances.friendDistance
+        )
     }
 }

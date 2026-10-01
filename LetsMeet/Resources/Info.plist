@@ -6,6 +6,11 @@
 	<string>LetsMeet uses your location to find a restaurant that's a fair midpoint between you and your friend.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>LetsMeet uses your location to find a restaurant that's a fair midpoint between you and your friend.</string>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>comgooglemaps</string>
+		<string>waze</string>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

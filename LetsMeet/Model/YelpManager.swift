@@ -33,12 +33,14 @@ class YelpManager {
     /// MeetingPlaceFinder, not computed or mutated here.
     var searchRadiusMeters: Double?
 
-    /// Photos fetched from Business Details, cached by business ID for the
-    /// session so scrolling a restaurant card away and back doesn't refetch.
-    private var photoCache: [String: [URL]] = [:]
+    /// Full Business Details response, cached by business ID for the session
+    /// so scrolling a restaurant card away and back doesn't refetch. Backs
+    /// both `fetchPhotos` (photo gallery) and `fetchBusinessDetails` (phone,
+    /// Yelp URL) from the same single request/cache entry per business.
+    private var businessDetailsCache: [String: BusinessDetails] = [:]
     /// Completions waiting on an in-flight Details request for a given ID,
     /// so two near-simultaneous card appearances don't fire duplicate requests.
-    private var inFlightPhotoRequests: [String: [(Result<[URL], YelpManagerError>) -> Void]] = [:]
+    private var inFlightDetailsRequests: [String: [(Result<BusinessDetails, YelpManagerError>) -> Void]] = [:]
 
     func didCaptureFriendsLocation(location: CLLocation) {
         friendLocation = location
@@ -150,19 +152,30 @@ class YelpManager {
     /// (GET /v3/businesses/{id}), the endpoint/field verified to return up to
     /// 3 photos on this app's current Yelp plan. Cached by business ID so
     /// repeat calls for the same restaurant resolve without a network request.
+    /// Thin wrapper over `fetchBusinessDetails` so this call's existing
+    /// signature/behavior is unchanged for `RestaurantPhotoGalleryView`.
     func fetchPhotos(forBusinessID id: String, completion: @escaping (Result<[URL], YelpManagerError>) -> Void) {
-        if let cached = photoCache[id] {
+        fetchBusinessDetails(forBusinessID: id) { result in
+            completion(result.map(\.photos))
+        }
+    }
+
+    /// Fetches phone/Yelp-URL for one business from the same Business
+    /// Details endpoint/cache `fetchPhotos` uses - never a second request for
+    /// a business whose details (photos or otherwise) were already fetched.
+    func fetchBusinessDetails(forBusinessID id: String, completion: @escaping (Result<BusinessDetails, YelpManagerError>) -> Void) {
+        if let cached = businessDetailsCache[id] {
             return completion(.success(cached))
         }
 
-        if inFlightPhotoRequests[id] != nil {
-            inFlightPhotoRequests[id]?.append(completion)
+        if inFlightDetailsRequests[id] != nil {
+            inFlightDetailsRequests[id]?.append(completion)
             return
         }
-        inFlightPhotoRequests[id] = [completion]
+        inFlightDetailsRequests[id] = [completion]
 
         guard let url = URL(string: NetworkURLConstants.businessDetails + id) else {
-            let callbacks = inFlightPhotoRequests.removeValue(forKey: id) ?? []
+            let callbacks = inFlightDetailsRequests.removeValue(forKey: id) ?? []
             callbacks.forEach { $0(.failure(.failedToUnwrapData)) }
             return
         }
@@ -172,9 +185,9 @@ class YelpManager {
 
         URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
             guard let self = self else { return }
-            let callbacks = self.inFlightPhotoRequests.removeValue(forKey: id) ?? []
+            let callbacks = self.inFlightDetailsRequests.removeValue(forKey: id) ?? []
 
-            func finish(_ result: Result<[URL], YelpManagerError>) {
+            func finish(_ result: Result<BusinessDetails, YelpManagerError>) {
                 callbacks.forEach { $0(result) }
             }
 
@@ -191,9 +204,9 @@ class YelpManager {
             else { return finish(.failure(.failedToUnwrapData)) }
 
             do {
-                let photos = try JSONDecoder().decode(BusinessDetails.self, from: data).photos
-                self.photoCache[id] = photos
-                finish(.success(photos))
+                let details = try JSONDecoder().decode(BusinessDetails.self, from: data)
+                self.businessDetailsCache[id] = details
+                finish(.success(details))
             } catch {
                 finish(.failure(.failedToDecodeRestaurants(error)))
             }

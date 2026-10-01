@@ -47,6 +47,7 @@ final class RestaurantFairnessSelector {
             userLocation: userLocation,
             friendLocation: friendLocation,
             etaCache: [:],
+            distanceCache: [:],
             verifiedSoFar: [],
             verifiedUnfairSoFar: [],
             yelpOrderIndex: [:],
@@ -73,6 +74,7 @@ final class RestaurantFairnessSelector {
         userLocation: CLLocation,
         friendLocation: CLLocation,
         etaCache: [String: (userETA: TimeInterval, friendETA: TimeInterval)],
+        distanceCache: [String: (userDistance: Double, friendDistance: Double)],
         verifiedSoFar: [Restaurant],
         verifiedUnfairSoFar: [Restaurant],
         yelpOrderIndex: [String: Int],
@@ -130,6 +132,7 @@ final class RestaurantFairnessSelector {
                         verifiedSoFar: verifiedSoFar,
                         verifiedUnfair: verifiedUnfairSoFar,
                         etaCache: etaCache,
+                        distanceCache: distanceCache,
                         yelpOrderIndex: yelpOrderIndex,
                         yelpEverReturnedResults: yelpEverReturnedResults,
                         roundWasReliable: true,
@@ -184,7 +187,7 @@ final class RestaurantFairnessSelector {
                     userLocation: userLocation,
                     friendLocation: friendLocation,
                     diagnostics: diagnostics,
-                    onBatchProgress: { partialResults in
+                    onBatchProgress: { partialResults, partialDistances in
                         // Cumulative snapshot of everything resolved so far in
                         // THIS round's verification, merged on top of
                         // whatever prior rounds already established - never a
@@ -193,6 +196,8 @@ final class RestaurantFairnessSelector {
                         // `buildDisplayList` call `finalize` uses at the end.
                         var progressCache = etaCache
                         partialResults.forEach { progressCache[$0.key] = $0.value }
+                        var progressDistanceCache = distanceCache
+                        partialDistances.forEach { progressDistanceCache[$0.key] = $0.value }
 
                         let consideredSoFar = restaurants.filter { progressCache[$0.id] != nil }
                         let fairSoFar = consideredSoFar.filter { self.isFair($0, cache: progressCache) }
@@ -225,11 +230,12 @@ final class RestaurantFairnessSelector {
                             fair: progressVerified,
                             verifiedUnfair: progressUnfair,
                             etaCache: progressCache,
-                            yelpOrderIndex: progressYelpOrderIndex
+                            yelpOrderIndex: progressYelpOrderIndex,
+                            distanceCache: progressDistanceCache
                         )
                         onProgress(displaySoFar)
                     }
-                ) { newResults, requestCount in
+                ) { newResults, newDistances, requestCount in
                     #if DEBUG
                     let etaVerificationDuration = CFAbsoluteTimeGetCurrent() - etaVerificationStart
                     diagnostics?.etaVerificationTotalDuration += etaVerificationDuration
@@ -245,6 +251,9 @@ final class RestaurantFairnessSelector {
                     var mergedCache = etaCache
                     newResults.forEach { mergedCache[$0.key] = $0.value }
                     newResults.forEach { diagnostics?.restaurantETAComparisons[$0.key] = $0.value }
+
+                    var mergedDistanceCache = distanceCache
+                    newDistances.forEach { mergedDistanceCache[$0.key] = $0.value }
 
                     let consideredThisRound = restaurants.filter { mergedCache[$0.id] != nil }
                     let fairThisRound = consideredThisRound.filter { self.isFair($0, cache: mergedCache) }
@@ -383,6 +392,7 @@ final class RestaurantFairnessSelector {
                             verifiedSoFar: mergedVerified,
                             verifiedUnfair: mergedUnfair,
                             etaCache: mergedCache,
+                            distanceCache: mergedDistanceCache,
                             yelpOrderIndex: mergedYelpOrderIndex,
                             yelpEverReturnedResults: sawResults,
                             roundWasReliable: roundReliable,
@@ -457,6 +467,7 @@ final class RestaurantFairnessSelector {
                             userLocation: userLocation,
                             friendLocation: friendLocation,
                             etaCache: mergedCache,
+                            distanceCache: mergedDistanceCache,
                             verifiedSoFar: mergedVerified,
                             verifiedUnfairSoFar: mergedUnfair,
                             yelpOrderIndex: mergedYelpOrderIndex,
@@ -476,6 +487,7 @@ final class RestaurantFairnessSelector {
                                 verifiedSoFar: mergedVerified,
                                 verifiedUnfair: mergedUnfair,
                                 etaCache: mergedCache,
+                                distanceCache: mergedDistanceCache,
                                 yelpOrderIndex: mergedYelpOrderIndex,
                                 yelpEverReturnedResults: sawResults,
                                 roundWasReliable: roundReliable,
@@ -500,6 +512,7 @@ final class RestaurantFairnessSelector {
                                 verifiedSoFar: mergedVerified,
                                 verifiedUnfair: mergedUnfair,
                                 etaCache: mergedCache,
+                                distanceCache: mergedDistanceCache,
                                 yelpOrderIndex: mergedYelpOrderIndex,
                                 yelpEverReturnedResults: sawResults,
                                 roundWasReliable: roundReliable,
@@ -518,6 +531,7 @@ final class RestaurantFairnessSelector {
                             userLocation: userLocation,
                             friendLocation: friendLocation,
                             etaCache: mergedCache,
+                            distanceCache: mergedDistanceCache,
                             verifiedSoFar: mergedVerified,
                             verifiedUnfairSoFar: mergedUnfair,
                             yelpOrderIndex: mergedYelpOrderIndex,
@@ -536,6 +550,7 @@ final class RestaurantFairnessSelector {
                             verifiedSoFar: mergedVerified,
                             verifiedUnfair: mergedUnfair,
                             etaCache: mergedCache,
+                            distanceCache: mergedDistanceCache,
                             yelpOrderIndex: mergedYelpOrderIndex,
                             yelpEverReturnedResults: sawResults,
                             roundWasReliable: roundReliable,
@@ -694,6 +709,7 @@ final class RestaurantFairnessSelector {
         verifiedSoFar: [Restaurant],
         verifiedUnfair: [Restaurant],
         etaCache: [String: (userETA: TimeInterval, friendETA: TimeInterval)],
+        distanceCache: [String: (userDistance: Double, friendDistance: Double)],
         yelpOrderIndex: [String: Int],
         yelpEverReturnedResults: Bool,
         roundWasReliable: Bool,
@@ -723,7 +739,8 @@ final class RestaurantFairnessSelector {
                 fair: verifiedSoFar,
                 verifiedUnfair: verifiedUnfair,
                 etaCache: etaCache,
-                yelpOrderIndex: yelpOrderIndex
+                yelpOrderIndex: yelpOrderIndex,
+                distanceCache: distanceCache
             )
             outcome = .success(restaurants: displayRestaurants)
         case .limitedFairOptions:
@@ -731,7 +748,8 @@ final class RestaurantFairnessSelector {
                 fair: verifiedSoFar,
                 verifiedUnfair: verifiedUnfair,
                 etaCache: etaCache,
-                yelpOrderIndex: yelpOrderIndex
+                yelpOrderIndex: yelpOrderIndex,
+                distanceCache: distanceCache
             )
             outcome = .limitedFairOptions(restaurants: displayRestaurants)
         case .noFairRestaurants:
@@ -846,11 +864,11 @@ final class RestaurantFairnessSelector {
         userLocation: CLLocation,
         friendLocation: CLLocation,
         diagnostics: MidpointDiagnostics?,
-        onBatchProgress: @escaping ([String: (userETA: TimeInterval, friendETA: TimeInterval)]) -> Void,
-        completion: @escaping ([String: (userETA: TimeInterval, friendETA: TimeInterval)], Int) -> Void
+        onBatchProgress: @escaping ([String: (userETA: TimeInterval, friendETA: TimeInterval)], [String: (userDistance: Double, friendDistance: Double)]) -> Void,
+        completion: @escaping ([String: (userETA: TimeInterval, friendETA: TimeInterval)], [String: (userDistance: Double, friendDistance: Double)], Int) -> Void
     ) {
         guard !restaurants.isEmpty else {
-            completion([:], 0)
+            completion([:], [:], 0)
             return
         }
 
@@ -858,7 +876,7 @@ final class RestaurantFairnessSelector {
         // Shared by both passes below (they share `state`), so a batch
         // completing in EITHER the primary or the one bounded recovery pass
         // reports the same cumulative "everything resolved so far" snapshot.
-        let reportProgress = { onBatchProgress(state.verifiedResults()) }
+        let reportProgress = { onBatchProgress(state.verifiedResults(), state.verifiedDistances()) }
 
         runPass(restaurants, passName: "primary", state: state, userLocation: userLocation, friendLocation: friendLocation, diagnostics: diagnostics, onBatchProgress: reportProgress) {
             let pending = restaurants.filter { state.isPending($0.id) }
@@ -869,7 +887,7 @@ final class RestaurantFairnessSelector {
                 totalRequests=\(state.totalRequests) maxObservedConcurrency=\(state.maxObservedConcurrency)
                 """)
                 #endif
-                completion(state.verifiedResults(), state.totalRequests)
+                completion(state.verifiedResults(), state.verifiedDistances(), state.totalRequests)
                 return
             }
 
@@ -891,7 +909,7 @@ final class RestaurantFairnessSelector {
                     (totalRequests=\(state.totalRequests), maxObservedConcurrency=\(state.maxObservedConcurrency))
                     """)
                     #endif
-                    completion(state.verifiedResults(), state.totalRequests)
+                    completion(state.verifiedResults(), state.verifiedDistances(), state.totalRequests)
                 }
             }
         }
@@ -946,8 +964,8 @@ final class RestaurantFairnessSelector {
         #endif
 
         // Serializes this pass's own running failure-fraction counters,
-        // which are otherwise mutated from inside `requestETA` completion
-        // closures - MKDirections.calculateETA does not guarantee those
+        // which are otherwise mutated from inside `requestRoute` completion
+        // closures - MKDirections.calculate does not guarantee those
         // land on any single thread, so two legs completing at the same
         // moment (even just the 2 legs of one candidate) could otherwise
         // race on these plain captured `var`s.
@@ -989,16 +1007,17 @@ final class RestaurantFairnessSelector {
                     id=\(restaurant.id) name=\(restaurant.name) - user leg STARTED attempt \(attemptNumber) (inFlight=\(inFlight))
                     """)
                     #endif
-                    requestETA(from: userLocation, to: destination) { result in
+                    requestRoute(from: userLocation, to: destination) { result in
                         let inFlightAfter = state.endAttempt()
                         passCounterQueue.sync { legsAttemptedThisPass += 1 }
                         switch result {
-                        case .success(let eta):
-                            state.recordUserSuccess(restaurant.id, eta: eta)
+                        case .success(let route):
+                            state.recordUserSuccess(restaurant.id, eta: route.eta, distance: route.distance)
                             #if DEBUG
                             Self.logger.log("""
                             [S9][\(diagnostics?.searchID ?? "?")] \(passName) pass: candidate \(candidateNumber)/\(candidates.count) \
-                            id=\(restaurant.id) - user leg COMPLETED attempt \(attemptNumber) eta=\(eta)s (inFlight=\(inFlightAfter))
+                            id=\(restaurant.id) - user leg COMPLETED attempt \(attemptNumber) eta=\(route.eta)s \
+                            distance=\(route.distance)m (inFlight=\(inFlightAfter))
                             """)
                             #endif
                         case .failure(let error):
@@ -1028,16 +1047,17 @@ final class RestaurantFairnessSelector {
                     id=\(restaurant.id) name=\(restaurant.name) - friend leg STARTED attempt \(attemptNumber) (inFlight=\(inFlight))
                     """)
                     #endif
-                    requestETA(from: friendLocation, to: destination) { result in
+                    requestRoute(from: friendLocation, to: destination) { result in
                         let inFlightAfter = state.endAttempt()
                         passCounterQueue.sync { legsAttemptedThisPass += 1 }
                         switch result {
-                        case .success(let eta):
-                            state.recordFriendSuccess(restaurant.id, eta: eta)
+                        case .success(let route):
+                            state.recordFriendSuccess(restaurant.id, eta: route.eta, distance: route.distance)
                             #if DEBUG
                             Self.logger.log("""
                             [S9][\(diagnostics?.searchID ?? "?")] \(passName) pass: candidate \(candidateNumber)/\(candidates.count) \
-                            id=\(restaurant.id) - friend leg COMPLETED attempt \(attemptNumber) eta=\(eta)s (inFlight=\(inFlightAfter))
+                            id=\(restaurant.id) - friend leg COMPLETED attempt \(attemptNumber) eta=\(route.eta)s \
+                            distance=\(route.distance)m (inFlight=\(inFlightAfter))
                             """)
                             #endif
                         case .failure(let error):
@@ -1156,22 +1176,28 @@ final class RestaurantFairnessSelector {
         (error as NSError).domain == MKErrorDomain
     }
 
-    private func requestETA(
+    /// Same two per-restaurant-leg MapKit requests the fairness pipeline has
+    /// always made, now using `calculate()` instead of `calculateETA()` so
+    /// the resulting `MKRoute` also carries `distance` - needed for the
+    /// decision card's travel block - without any additional MKDirections
+    /// request. `calculate()` is heavier per-request than `calculateETA()`
+    /// since it also computes route geometry; request COUNT is unchanged.
+    private func requestRoute(
         from origin: CLLocation,
         to destination: CLLocation,
-        completion: @escaping (Result<TimeInterval, Error>) -> Void
+        completion: @escaping (Result<(eta: TimeInterval, distance: Double), Error>) -> Void
     ) {
         let request = MKDirections.Request()
         request.source = MKMapItem(placemark: MKPlacemark(coordinate: origin.coordinate))
         request.destination = MKMapItem(placemark: MKPlacemark(coordinate: destination.coordinate))
         request.transportType = .automobile
 
-        MKDirections(request: request).calculateETA { response, error in
+        MKDirections(request: request).calculate { response, error in
             #if DEBUG
-            Self.logger.log("[S9] RestaurantFairnessSelector.requestETA completion thread: isMainThread=\(Thread.isMainThread)")
+            Self.logger.log("[S9] RestaurantFairnessSelector.requestRoute completion thread: isMainThread=\(Thread.isMainThread)")
             #endif
-            if let response = response {
-                completion(.success(response.expectedTravelTime))
+            if let route = response?.routes.first {
+                completion(.success((eta: route.expectedTravelTime, distance: route.distance)))
             } else {
                 completion(.failure(error ?? YelpManagerError.failedToUnwrapMidpoint))
             }

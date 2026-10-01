@@ -35,6 +35,7 @@
 		FD7DACEB2F5F27815709ED73 /* RestaurantCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 424C6F06066C1C28C1C9C01F /* RestaurantCardView.swift */; };
 		C5EFA4E2ABB6467C812BACA2 /* RouteSeededMidpointStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09C426D915474A0AA91179E4 /* RouteSeededMidpointStrategy.swift */; };
 		BA0A85303D1D4132B8B01211 /* RoutePolylineMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9401900B24E14F09840EC1BF /* RoutePolylineMath.swift */; };
+		2098DB9460801F93378080E8 /* MapApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 424B3A66BC49721A02A8565A /* MapApp.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -56,6 +57,7 @@
 		B497EAEAC35199FD46CD8254 /* RestaurantFairnessSelector.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RestaurantFairnessSelector.swift; sourceTree = "<group>"; };
 		E6734130BD8E4E9D8BA43718 /* ETAVerificationDecision.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ETAVerificationDecision.swift; sourceTree = "<group>"; };
 		1C7BA6C7891C4E71BEBC9C1B /* LegSchedulerState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LegSchedulerState.swift; sourceTree = "<group>"; };
+		424B3A66BC49721A02A8565A /* MapApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MapApp.swift; sourceTree = "<group>"; };
 		BB171A612AB25E49006CBDD5 /* config.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = config.plist; sourceTree = "<group>"; };
 		BB333962281C9F8E00A2142E /* LetsMeet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LetsMeet.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB333965281C9F8E00A2142E /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
@@ -155,6 +157,7 @@
 			isa = PBXGroup;
 			children = (
 				5A4EC2AFE6897BC9E3D6FBB8 /* Color+LetsMeet.swift */,
+				424B3A66BC49721A02A8565A /* MapApp.swift */,
 			);
 			name = Utilities;
 			path = Utilities;
@@ -310,6 +313,7 @@
 				A0C0FFEE0000000000000001 /* AddressAutocompleter.swift in Sources */,
 				9AE35DD1FE5F69931546D44F /* HomeViewModel.swift in Sources */,
 				39C65558E06763B1421647B7 /* Color+LetsMeet.swift in Sources */,
+				2098DB9460801F93378080E8 /* MapApp.swift in Sources */,
 				F96255B09D5A28ABFAC93591 /* LetsMeetLogo.swift in Sources */,
 				F49A55760DF9FC6493036ECB /* LetsMeetLaunchIntro.swift in Sources */,
 				FD7DACEB2F5F27815709ED73 /* RestaurantCardView.swift in Sources */,
