@@ -10,6 +10,7 @@ struct HomeMapView: View {
 
     @ObservedObject var viewModel: HomeViewModel
     @StateObject private var locationProvider = LocationProvider()
+    @AppStorage("appMapStyle") private var mapStylePreference: AppMapStyle = .standard
 
     @State private var cameraPosition: MapCameraPosition = .region(
         MKCoordinateRegion(
@@ -18,6 +19,7 @@ struct HomeMapView: View {
         )
     )
     @State private var hasCenteredOnUser = false
+    @State private var isShowingSettings = false
     @FocusState private var isAddressFieldFocused: Bool
     /// Top edge of the on-screen keyboard in screen coordinates, or nil when
     /// no keyboard is showing. Only used to cap the suggestion dropdown's
@@ -70,9 +72,13 @@ struct HomeMapView: View {
 
                 UserAnnotation()
             }
+            .mapStyle(mapStylePreference.mapStyle)
             .ignoresSafeArea()
 
             brandingBadge
+                .padding(.top, 8)
+
+            settingsButton
                 .padding(.top, 8)
 
             if !viewModel.isShowingResults {
@@ -126,6 +132,10 @@ struct HomeMapView: View {
                 .presentationDetents([HomeMapView.peekResultsDetent, .large], selection: $resultsDetent)
                 .presentationDragIndicator(.visible)
                 .presentationBackgroundInteraction(.enabled(upThrough: HomeMapView.peekResultsDetent))
+        }
+        .sheet(isPresented: $isShowingSettings) {
+            SettingsView()
+                .presentationDetents([.medium])
         }
     }
 
@@ -216,26 +226,67 @@ struct HomeMapView: View {
         cameraPosition = .region(fitted)
     }
 
+    /// The standard close-in framing used whenever the map recenters on the
+    /// user's own location - on first launch (`recenterOnUserIfNeeded`) and
+    /// when the Home badge resets the search. Kept in one place so both
+    /// spots share the same span instead of two independently hard-coded
+    /// copies.
+    private func regionCenteredOnUser(_ coordinate: CLLocationCoordinate2D) -> MKCoordinateRegion {
+        MKCoordinateRegion(center: coordinate, span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05))
+    }
+
     private func recenterOnUserIfNeeded() {
         guard !hasCenteredOnUser, let coordinate = locationProvider.currentCoordinate else { return }
         hasCenteredOnUser = true
-        cameraPosition = .region(
-            MKCoordinateRegion(
-                center: coordinate,
-                span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)
-            )
-        )
+        cameraPosition = .region(regionCenteredOnUser(coordinate))
+    }
+
+    /// Returns the home screen to its original, pre-search state: resets the
+    /// view model's search/results state, dismisses the address field's
+    /// keyboard/focus, and recenters the map on the user's already-known
+    /// location (no new location request) - mirroring the framing used on
+    /// first launch.
+    private func resetToHome() {
+        viewModel.resetToHome()
+        isAddressFieldFocused = false
+        if let coordinate = locationProvider.currentCoordinate {
+            cameraPosition = .region(regionCenteredOnUser(coordinate))
+        }
     }
 
     private var brandingBadge: some View {
-        Text("Let's Meet")
-            .font(.headline)
-            .foregroundColor(.white)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
-            .background(LetsMeetColor.lightBlue)
-            .clipShape(Capsule())
-            .shadow(color: .black.opacity(0.2), radius: 6, y: 3)
+        Button(action: resetToHome) {
+            Text("Let's Meet")
+                .font(.headline)
+                .foregroundColor(.white)
+                .padding(.horizontal, 16)
+                .padding(.vertical, 8)
+                .background(LetsMeetColor.lightBlue)
+                .clipShape(Capsule())
+                .shadow(color: .black.opacity(0.2), radius: 6, y: 3)
+        }
+    }
+
+    /// Occupies the full width of the map (matching `brandingBadge`'s own
+    /// ZStack layer) and uses an internal `Spacer` to push the gear to the
+    /// trailing edge - kept as its own ZStack sibling, never wrapping
+    /// `brandingBadge` in a shared HStack, so the "Let's Meet" badge stays
+    /// exactly centered regardless of this button's presence.
+    private var settingsButton: some View {
+        HStack {
+            Spacer()
+            Button(action: { isShowingSettings = true }) {
+                Image(systemName: "gearshape.fill")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.white)
+                    .frame(width: 36, height: 36)
+                    .background(LetsMeetColor.lightBlue)
+                    .clipShape(Circle())
+                    .shadow(color: .black.opacity(0.2), radius: 6, y: 3)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.trailing, 16)
     }
 
     private static let suggestionRowHeight: CGFloat = 52

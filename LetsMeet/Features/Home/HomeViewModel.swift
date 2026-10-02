@@ -124,6 +124,36 @@ final class HomeViewModel: ObservableObject {
         }
     }
 
+    /// Clears everything a search produces on the map/results side - pins,
+    /// routes, midpoint/radius, and the result list itself - without
+    /// touching location/permission state or the in-progress search flag.
+    /// Shared by `findAPlace()` (clearing the prior search before starting a
+    /// new one) and `resetToHome()` (clearing it with nothing replacing it).
+    private func clearSearchResultState() {
+        suggestions = []
+        friendCoordinate = nil
+        meetingPointCoordinate = nil
+        searchRadiusMeters = nil
+        route = nil
+        restaurants = []
+    }
+
+    /// Returns the home screen to its original, pre-search state: dismisses
+    /// results, clears the map's search-derived state, and resets the
+    /// friend-address field so the next search starts clean. Invalidates
+    /// `activeSearchID` so a late progress/terminal callback from a search
+    /// still in flight is treated as stale (same staleness check `findAPlace`
+    /// already relies on) and can't repopulate state after the reset.
+    /// Deliberately leaves location/permission state untouched.
+    func resetToHome() {
+        activeSearchID = nil
+        isSearching = false
+        isShowingResults = false
+        errorMessage = nil
+        clearSearchResultState()
+        addressText = ""
+    }
+
     func findAPlace() {
         let searchID = String(UUID().uuidString.prefix(8))
         activeSearchID = searchID
@@ -153,14 +183,9 @@ final class HomeViewModel: ObservableObject {
         }
 
         isSearching = true
-        suggestions = []
-        friendCoordinate = nil
-        meetingPointCoordinate = nil
-        searchRadiusMeters = nil
-        route = nil
         // Clean reset so a new search's progressive/terminal results can
         // never mix with whatever the previous search left displayed.
-        restaurants = []
+        clearSearchResultState()
 
         // A valid autocomplete selection already has a reliable coordinate -
         // skip geocoding the same text again.

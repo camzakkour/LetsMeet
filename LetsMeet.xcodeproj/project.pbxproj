@@ -36,6 +36,8 @@
 		C5EFA4E2ABB6467C812BACA2 /* RouteSeededMidpointStrategy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09C426D915474A0AA91179E4 /* RouteSeededMidpointStrategy.swift */; };
 		BA0A85303D1D4132B8B01211 /* RoutePolylineMath.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9401900B24E14F09840EC1BF /* RoutePolylineMath.swift */; };
 		2098DB9460801F93378080E8 /* MapApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 424B3A66BC49721A02A8565A /* MapApp.swift */; };
+		A0C0FFEE0000000000000011 /* AppPreferences.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0C0FFEE0000000000000010 /* AppPreferences.swift */; };
+		A0C0FFEE0000000000000013 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0C0FFEE0000000000000012 /* SettingsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -70,6 +72,8 @@
 		BBCC94F82824837300F61C2E /* YelpManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YelpManager.swift; sourceTree = "<group>"; };
 		BBCC94FA2824838200F61C2E /* NetworkConstants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkConstants.swift; sourceTree = "<group>"; };
 		CBE015D30A49CB0657C08F62 /* LetsMeetLaunchIntro.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LetsMeetLaunchIntro.swift; sourceTree = "<group>"; };
+		A0C0FFEE0000000000000010 /* AppPreferences.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = AppPreferences.swift; sourceTree = "<group>"; };
+		A0C0FFEE0000000000000012 /* SettingsView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -116,6 +120,7 @@
 				BB01A003000000000000A003 /* Launch */,
 				BB01A004000000000000A004 /* Home */,
 				BB01A005000000000000A005 /* Results */,
+				A0C0FFEE0000000000000014 /* Settings */,
 			);
 			name = Features;
 			path = Features;
@@ -153,11 +158,21 @@
 			path = Results;
 			sourceTree = "<group>";
 		};
+		A0C0FFEE0000000000000014 /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				A0C0FFEE0000000000000012 /* SettingsView.swift */,
+			);
+			name = Settings;
+			path = Settings;
+			sourceTree = "<group>";
+		};
 		BB01A006000000000000A006 /* Utilities */ = {
 			isa = PBXGroup;
 			children = (
 				5A4EC2AFE6897BC9E3D6FBB8 /* Color+LetsMeet.swift */,
 				424B3A66BC49721A02A8565A /* MapApp.swift */,
+				A0C0FFEE0000000000000010 /* AppPreferences.swift */,
 			);
 			name = Utilities;
 			path = Utilities;
@@ -328,6 +343,8 @@
 				4A2BFBC59B614D66A2DB4629 /* LegSchedulerState.swift in Sources */,
 				0E600E20F8887EB410DBA8A8 /* RestaurantFairnessSelector.swift in Sources */,
 				B0FF834701DE6DAB9048004B /* MeetingPlaceFinder.swift in Sources */,
+				A0C0FFEE0000000000000011 /* AppPreferences.swift in Sources */,
+				A0C0FFEE0000000000000013 /* SettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

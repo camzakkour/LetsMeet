@@ -38,7 +38,7 @@ struct LaunchIntroView: View {
             let logoWidth = proxy.size.width * logoWidthFraction
 
             ZStack {
-                Color.white
+                Color(.systemBackground)
                     .opacity(backgroundOpacity)
                     .ignoresSafeArea()
 
@@ -139,6 +139,7 @@ struct LaunchIntroView: View {
 /// not replay.
 struct LaunchContainerView: View {
     @ObservedObject var homeViewModel: HomeViewModel
+    @AppStorage("appAppearance") private var appAppearance: AppAppearance = .system
 
     @State private var showIntro = true
     @State private var mapOpacity: Double = 0
@@ -153,5 +154,6 @@ struct LaunchContainerView: View {
                 LaunchIntroView(onFinished: { showIntro = false }, mapOpacity: $mapOpacity)
             }
         }
+        .preferredColorScheme(appAppearance.colorScheme)
     }
 }

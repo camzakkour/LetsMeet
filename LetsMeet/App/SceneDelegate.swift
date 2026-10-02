@@ -12,6 +12,14 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
     var window: UIWindow?
 
+    /// Token for the UserDefaults observer that keeps `window.overrideUserInterfaceStyle`
+    /// synced to the persisted appearance preference. `.preferredColorScheme` alone can't
+    /// reach the real window here, since the SwiftUI root is hosted inside a
+    /// UINavigationController rather than being the window's own rootViewController - so
+    /// this bridges the preference to UIKit's trait system directly, which then cascades
+    /// through the nav controller, hosting controller, and any presented sheets normally.
+    private var appearanceObserver: NSObjectProtocol?
+
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
         guard let windowScene = (scene as? UIWindowScene) else { return }
 
@@ -24,6 +32,33 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         window.rootViewController = navigationController
         self.window = window
         window.makeKeyAndVisible()
+
+        applyAppearancePreference()
+
+        if let appearanceObserver {
+            NotificationCenter.default.removeObserver(appearanceObserver)
+        }
+        appearanceObserver = NotificationCenter.default.addObserver(
+            forName: UserDefaults.didChangeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            self?.applyAppearancePreference()
+        }
+    }
+
+    private func applyAppearancePreference() {
+        let rawValue = UserDefaults.standard.string(forKey: "appAppearance")
+        let appearance = rawValue.flatMap(AppAppearance.init(rawValue:)) ?? .system
+
+        let style: UIUserInterfaceStyle
+        switch appearance {
+        case .system: style = .unspecified
+        case .light: style = .light
+        case .dark: style = .dark
+        }
+
+        window?.overrideUserInterfaceStyle = style
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
@@ -31,6 +66,10 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // This occurs shortly after the scene enters the background, or when its session is discarded.
         // Release any resources associated with this scene that can be re-created the next time the scene connects.
         // The scene may re-connect later, as its session was not necessarily discarded (see `application:didDiscardSceneSessions` instead).
+        if let appearanceObserver {
+            NotificationCenter.default.removeObserver(appearanceObserver)
+            self.appearanceObserver = nil
+        }
     }
 
     func sceneDidBecomeActive(_ scene: UIScene) {
