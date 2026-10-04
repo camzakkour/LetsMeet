@@ -20,7 +20,10 @@ struct HomeMapView: View {
         )
     )
     @State private var hasCenteredOnUser = false
-    @State private var isShowingSettings = false
+    /// Which presentation context is showing Settings, or nil when it isn't.
+    /// Chosen when the gear is tapped and never moved afterwards, so the
+    /// sheet stays where it opened even if results appear or disappear.
+    @State private var settingsPresenter: SettingsPresenter?
     @FocusState private var isAddressFieldFocused: Bool
     /// Top edge of the on-screen keyboard in screen coordinates, or nil when
     /// no keyboard is showing. Only used to cap the suggestion dropdown's
@@ -168,6 +171,10 @@ struct HomeMapView: View {
                 // Every newly presented search opens fully expanded, even if a
                 // prior search's sheet was left at the peek detent.
                 resultsDetent = .large
+            } else if settingsPresenter == .results {
+                // Settings was hosted by the results sheet, which is gone;
+                // don't let the stale request present on the next results.
+                settingsPresenter = nil
             }
         }
         .alert(
@@ -181,8 +188,14 @@ struct HomeMapView: View {
         } message: {
             Text(viewModel.errorMessage ?? "")
         }
-        .sheet(isPresented: $viewModel.isShowingResults) {
+        .sheet(isPresented: resultsSheetBinding) {
             RestaurantResultsSheet(restaurants: viewModel.restaurants, isExpanded: resultsDetent == .large, isSearchInProgress: viewModel.isSearching)
+                // Settings opened while results are showing is presented from
+                // here: a second `.sheet` on the root view can't present while
+                // the results sheet is up.
+                .sheet(isPresented: settingsBinding(for: .results)) {
+                    settingsSheet
+                }
                 .presentationDetents([HomeMapView.peekResultsDetent, .large], selection: $resultsDetent)
                 .presentationDragIndicator(.visible)
                 .presentationBackgroundInteraction(.enabled(upThrough: HomeMapView.peekResultsDetent))
@@ -193,10 +206,38 @@ struct HomeMapView: View {
                 // still dismisses the sheet programmatically.
                 .interactiveDismissDisabled()
         }
-        .sheet(isPresented: $isShowingSettings) {
-            SettingsView()
-                .presentationDetents([.medium])
+        .sheet(isPresented: settingsBinding(for: .home)) {
+            settingsSheet
         }
+    }
+
+    private enum SettingsPresenter {
+        case home
+        case results
+    }
+
+    private var settingsSheet: some View {
+        SettingsView()
+            .presentationDetents([.medium])
+    }
+
+    /// Results that arrive while Settings is open from Home wait for it to
+    /// close; presenting them would displace Settings, which would then
+    /// reappear once the results are dismissed.
+    private var resultsSheetBinding: Binding<Bool> {
+        Binding(
+            get: { viewModel.isShowingResults && settingsPresenter != .home },
+            set: { viewModel.isShowingResults = $0 }
+        )
+    }
+
+    private func settingsBinding(for presenter: SettingsPresenter) -> Binding<Bool> {
+        Binding(
+            get: { settingsPresenter == presenter },
+            set: { isPresented in
+                if !isPresented && settingsPresenter == presenter { settingsPresenter = nil }
+            }
+        )
     }
 
     /// Restaurants Yelp returned coordinates for - annotationItems/MapAnnotation
@@ -335,7 +376,7 @@ struct HomeMapView: View {
     private var settingsButton: some View {
         HStack {
             Spacer()
-            Button(action: { isShowingSettings = true }) {
+            Button(action: { settingsPresenter = viewModel.isShowingResults ? .results : .home }) {
                 Image(systemName: "gearshape.fill")
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.white)
