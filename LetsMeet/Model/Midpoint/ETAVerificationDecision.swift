@@ -44,6 +44,24 @@ enum ETAVerificationDecision {
         return Double(etaVerifiedCount) / Double(etaAttemptedCount) >= minReliableFraction
     }
 
+    /// The ETA reliability carried from one search round into the next, so a
+    /// later round whose Yelp request fails can still classify an empty
+    /// result correctly (see `finalOutcomeCase`'s `roundWasReliable`). Only a
+    /// round that actually attempted ETA verification is evidence about ETA
+    /// reliability: a round that attempted none (for example Yelp returned
+    /// zero results, or every shortlisted candidate was already cached) is
+    /// trivially "reliable" in `isRoundReliable` and must NOT overwrite what
+    /// the most recent round with real evidence established. The initial
+    /// carried value is `true` (no evidence yet), so a search where no round
+    /// has ever attempted ETAs classifies as it always did.
+    static func carriedReliability(
+        previous: Bool,
+        etaAttemptedCount: Int,
+        roundWasReliable: Bool
+    ) -> Bool {
+        etaAttemptedCount > 0 ? roundWasReliable : previous
+    }
+
     /// Whether an ETA-verification pass should stop dispatching further,
     /// not-yet-started batches because the evidence gathered *so far this
     /// pass* already shows a broad/systemic failure rather than isolated

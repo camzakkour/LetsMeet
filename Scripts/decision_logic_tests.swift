@@ -1433,6 +1433,106 @@ do {
     expect(ETAVerificationDecision.finalOutcomeCase(verifiedCount: 0, additionalVerifiedCount: 10, roundWasReliable: true, yelpEverReturnedResults: true), .limitedFairOptions, "zero fair + verified fallback -> .limitedFairOptions (shown, not an error)")
 }
 
+// MARK: - LYF. LATER YELP FAILURE CARRIES THE LAST REAL ETA-RELIABILITY EVIDENCE
+// RestaurantFairnessSelector itself can't be compiled into this harness
+// (YelpManager / MapKit), so these tests fold the same pure helpers the
+// selector uses: each completed round updates the carried reliability via
+// carriedReliability(previous:etaAttemptedCount:roundWasReliable:), and a
+// later Yelp failure finalizes with that carried value.
+do {
+    print("LYF. LATER YELP FAILURE CLASSIFICATION")
+
+    typealias Round = (attempted: Int, verified: Int)
+
+    /// Folds completed rounds exactly like the selector's per-round
+    /// `carriedReliability`, starting from the initial value `true`.
+    func carriedAfter(_ rounds: [Round]) -> Bool {
+        rounds.reduce(true) { carried, round in
+            ETAVerificationDecision.carriedReliability(
+                previous: carried,
+                etaAttemptedCount: round.attempted,
+                roundWasReliable: ETAVerificationDecision.isRoundReliable(etaAttemptedCount: round.attempted, etaVerifiedCount: round.verified)
+            )
+        }
+    }
+
+    // Helper semantics.
+    expect(ETAVerificationDecision.carriedReliability(previous: true, etaAttemptedCount: 3, roundWasReliable: false), false, "a round that attempted ETAs and was unreliable updates carried reliability to false")
+    expect(ETAVerificationDecision.carriedReliability(previous: false, etaAttemptedCount: 3, roundWasReliable: true), true, "a round that attempted ETAs and was reliable updates carried reliability to true")
+    expect(ETAVerificationDecision.carriedReliability(previous: false, etaAttemptedCount: 0, roundWasReliable: true), false, "a round that attempted zero ETAs preserves an earlier unreliable value")
+    expect(ETAVerificationDecision.carriedReliability(previous: true, etaAttemptedCount: 0, roundWasReliable: true), true, "a round that attempted zero ETAs preserves an earlier reliable value")
+    expect(carriedAfter([]), true, "initial carried reliability (no evidence yet) is true")
+
+    // 1. Sparse + unreliable earlier round (3 Yelp results, 0 of 3 ETAs
+    //    verified) -> remediation continues -> next Yelp request fails ->
+    //    nothing accumulated -> etaVerificationUnavailable.
+    let unreliableRound = [Round(attempted: 3, verified: 0)]
+    expect(
+        ETAVerificationDecision.nextActionKind(isSparse: true, roundWasReliable: ETAVerificationDecision.isRoundReliable(etaAttemptedCount: 3, etaVerifiedCount: 0), canExpandRadius: true, canShiftCorridor: true),
+        .shiftCorridor,
+        "the sparse unreliable round still proceeds to another round (the path under test)"
+    )
+    expect(carriedAfter(unreliableRound), false, "unreliable evidence round -> carried false")
+    expect(
+        ETAVerificationDecision.finalOutcomeCase(verifiedCount: 0, additionalVerifiedCount: 0, roundWasReliable: carriedAfter(unreliableRound), yelpEverReturnedResults: true),
+        .etaVerificationUnavailable,
+        "sparse + unreliable, later Yelp failure, nothing accumulated -> .etaVerificationUnavailable (not .noFairRestaurants)"
+    )
+
+    // 2. Sparse + reliable earlier round with nothing accumulated -> existing
+    //    reliable empty classification is preserved.
+    expect(carriedAfter([Round(attempted: 3, verified: 3)]), true, "reliable evidence round -> carried true")
+    expect(
+        ETAVerificationDecision.finalOutcomeCase(verifiedCount: 0, additionalVerifiedCount: 0, roundWasReliable: carriedAfter([Round(attempted: 3, verified: 3)]), yelpEverReturnedResults: true),
+        .noFairRestaurants,
+        "sparse + reliable, later Yelp failure, nothing accumulated -> existing .noFairRestaurants"
+    )
+
+    // 3. Unreliable earlier round + accumulated verified fallback -> the
+    //    carried (false) reliability does NOT demote it.
+    expect(
+        ETAVerificationDecision.finalOutcomeCase(verifiedCount: 0, additionalVerifiedCount: 1, roundWasReliable: carriedAfter([Round(attempted: 4, verified: 1)]), yelpEverReturnedResults: true),
+        .limitedFairOptions,
+        "unreliable earlier round + 1 accumulated fallback, later Yelp failure -> .limitedFairOptions"
+    )
+    expect(carriedAfter([Round(attempted: 4, verified: 1)]), false, "(precondition) the 1-of-4 round really is unreliable")
+
+    // 4. Unreliable earlier round + enough accumulated fair restaurants.
+    expect(
+        ETAVerificationDecision.finalOutcomeCase(verifiedCount: 3, additionalVerifiedCount: 0, roundWasReliable: false, yelpEverReturnedResults: true),
+        .success,
+        "unreliable earlier round + 3 accumulated fair, later Yelp failure -> .success"
+    )
+
+    // 5. Deferred case unchanged: a legitimately empty Yelp round (no ETAs
+    //    ever attempted) followed by a Yelp failure keeps today's
+    //    .noRestaurantsNearby, because carried reliability stays true.
+    let zeroResultsRound = [Round(attempted: 0, verified: 0)]
+    expect(carriedAfter(zeroResultsRound), true, "no round ever attempted ETAs -> carried stays true")
+    expect(
+        ETAVerificationDecision.finalOutcomeCase(verifiedCount: 0, additionalVerifiedCount: 0, roundWasReliable: carriedAfter(zeroResultsRound), yelpEverReturnedResults: false),
+        .noRestaurantsNearby,
+        "zero-Yelp-result round then Yelp failure -> .noRestaurantsNearby (deferred, unchanged)"
+    )
+
+    // 6. Multi-round zero-attempt sequence: unreliable evidence round, then a
+    //    round that attempted nothing (Yelp returned zero results), then a
+    //    Yelp failure. The zero-attempt round must not erase the unreliable
+    //    evidence.
+    let sequence = [Round(attempted: 3, verified: 0), Round(attempted: 0, verified: 0)]
+    expect(ETAVerificationDecision.isRoundReliable(etaAttemptedCount: 0, etaVerifiedCount: 0), true, "(precondition) the zero-attempt round is itself trivially reliable")
+    expect(carriedAfter(sequence), false, "zero-attempt round after an unreliable round preserves carried false")
+    expect(
+        ETAVerificationDecision.finalOutcomeCase(verifiedCount: 0, additionalVerifiedCount: 0, roundWasReliable: carriedAfter(sequence), yelpEverReturnedResults: true),
+        .etaVerificationUnavailable,
+        "unreliable -> zero-attempt -> Yelp failure -> .etaVerificationUnavailable"
+    )
+    // A later round with real, reliable evidence does replace it.
+    expect(carriedAfter(sequence + [Round(attempted: 2, verified: 2)]), true, "a later round with real reliable evidence updates carried back to true")
+    // And a reliable evidence round followed by an unreliable one carries false.
+    expect(carriedAfter([Round(attempted: 4, verified: 4), Round(attempted: 4, verified: 0)]), false, "the most recent evidence round wins")
+}
+
 print("")
 if failures == 0 {
     print("ALL TESTS PASSED")

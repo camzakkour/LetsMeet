@@ -53,6 +53,7 @@ final class RestaurantFairnessSelector {
             yelpOrderIndex: [:],
             yelpEverReturnedResults: false,
             yelpEverSucceeded: false,
+            lastEvidenceRoundWasReliable: true,
             radiusExpansionsUsed: 0,
             corridorShiftsUsed: 0,
             searchedCenters: [(fraction: seedFraction, coordinate: region.center)],
@@ -80,6 +81,7 @@ final class RestaurantFairnessSelector {
         yelpOrderIndex: [String: Int],
         yelpEverReturnedResults: Bool,
         yelpEverSucceeded: Bool,
+        lastEvidenceRoundWasReliable: Bool,
         radiusExpansionsUsed: Int,
         corridorShiftsUsed: Int,
         searchedCenters: [(fraction: Double, coordinate: CLLocationCoordinate2D)],
@@ -124,10 +126,14 @@ final class RestaurantFairnessSelector {
                 if !yelpEverSucceeded {
                     completion(.searchFailed(error))
                 } else {
-                    // A Yelp-request failure, not an ETA-reliability issue -
-                    // roundWasReliable is irrelevant here and passed as true
-                    // so an empty verifiedSoFar still resolves to the
-                    // existing noFairRestaurants/noRestaurantsNearby logic.
+                    // The Yelp failure itself says nothing about ETA
+                    // reliability, so use the reliability from the most
+                    // recent earlier round that actually attempted ETA
+                    // verification. It only matters when nothing has
+                    // accumulated: an empty verifiedSoFar after an
+                    // unreliable earlier round must stay
+                    // etaVerificationUnavailable, not become
+                    // noFairRestaurants.
                     self.finalize(
                         verifiedSoFar: verifiedSoFar,
                         verifiedUnfair: verifiedUnfairSoFar,
@@ -135,7 +141,7 @@ final class RestaurantFairnessSelector {
                         distanceCache: distanceCache,
                         yelpOrderIndex: yelpOrderIndex,
                         yelpEverReturnedResults: yelpEverReturnedResults,
-                        roundWasReliable: true,
+                        roundWasReliable: lastEvidenceRoundWasReliable,
                         diagnostics: diagnostics,
                         completion: completion
                     )
@@ -338,6 +344,14 @@ final class RestaurantFairnessSelector {
                         etaAttemptedCount: etaAttemptedCount,
                         etaVerifiedCount: etaVerifiedCount
                     )
+                    // Carried into any following round so a later Yelp
+                    // failure can classify an empty result; a round that
+                    // attempted no ETAs leaves the earlier value untouched.
+                    let carriedReliability = ETAVerificationDecision.carriedReliability(
+                        previous: lastEvidenceRoundWasReliable,
+                        etaAttemptedCount: etaAttemptedCount,
+                        roundWasReliable: roundReliable
+                    )
 
                     #if DEBUG
                     let shortlistIDSet = Set(shortlist.map(\.id))
@@ -473,6 +487,7 @@ final class RestaurantFairnessSelector {
                             yelpOrderIndex: mergedYelpOrderIndex,
                             yelpEverReturnedResults: sawResults,
                             yelpEverSucceeded: true,
+                            lastEvidenceRoundWasReliable: carriedReliability,
                             radiusExpansionsUsed: radiusExpansionsUsed + 1,
                             corridorShiftsUsed: corridorShiftsUsed,
                             searchedCenters: searchedCenters,
@@ -537,6 +552,7 @@ final class RestaurantFairnessSelector {
                             yelpOrderIndex: mergedYelpOrderIndex,
                             yelpEverReturnedResults: sawResults,
                             yelpEverSucceeded: true,
+                            lastEvidenceRoundWasReliable: carriedReliability,
                             radiusExpansionsUsed: radiusExpansionsUsed,
                             corridorShiftsUsed: corridorShiftsUsed + 1,
                             searchedCenters: searchedCenters + [(fraction: shift.fraction, coordinate: shift.coordinate)],
