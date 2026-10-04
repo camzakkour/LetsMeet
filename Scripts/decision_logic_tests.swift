@@ -39,6 +39,7 @@
 //     LetsMeet/Model/YelpResults.swift \
 //     LetsMeet/Model/Midpoint/ETAVerificationDecision.swift \
 //     LetsMeet/Model/Midpoint/LegSchedulerState.swift \
+//     LetsMeet/Features/Results/FairnessPresentation.swift \
 //     /tmp/main.swift \
 //     && /tmp/decision_logic_tests
 //
@@ -48,6 +49,11 @@
 // values. It only imports Foundation/CoreLocation - no MapKit, no UIKit -
 // so it compiles and runs standalone here exactly like the other pure
 // model/decision files.
+//
+// FairnessPresentation.swift (Foundation-only) is the pure helper behind the
+// results sheet's "Other options" divider and zero-fair message; the PR-*
+// scenarios at the end of this file exercise it against real
+// `buildDisplayList` output.
 
 import Foundation
 
@@ -1336,6 +1342,95 @@ do {
     session.receiveProgress(searchID: "pd11-search", snapshot: ETAVerificationDecision.buildDisplayList(fair: batch2Fair, verifiedUnfair: batch2Unfair, etaCache: cache, yelpOrderIndex: yelpOrder))
     session.receiveSuccessOutcome(searchID: "pd11-search", finalRestaurants: progressiveFinal)
     expect(session.restaurants.map(\.id), nonProgressiveFinal.map(\.id), "what the user ultimately sees after progressive delivery finishes is identical to the non-progressive final result")
+}
+
+// MARK: - Fairness presentation (PR-*): results-sheet divider / zero-fair message
+//
+// Lists are built with the real `buildDisplayList`, so ordering and
+// `fairnessDisplayStatus` are exactly what the UI receives in production.
+func presentationList(fair: Int, fallback: Int, tag: String) -> [Restaurant] {
+    let fairRestaurants = (0..<fair).map { makeRestaurant("\(tag)-fair\($0)") }
+    let fallbackRestaurants = (0..<fallback).map { makeRestaurant("\(tag)-fallback\($0)") }
+    var cache: [String: (userETA: TimeInterval, friendETA: TimeInterval)] = [:]
+    for (index, r) in fallbackRestaurants.enumerated() { cache[r.id] = etaPair(excessSeconds: 60 + TimeInterval(index) * 30) }
+    return ETAVerificationDecision.buildDisplayList(fair: fairRestaurants, verifiedUnfair: fallbackRestaurants, etaCache: cache, yelpOrderIndex: [:])
+}
+
+func isFairFirst(_ list: [Restaurant]) -> Bool {
+    guard let firstFallback = list.firstIndex(where: { $0.fairnessDisplayStatus == .verifiedAdditional }) else { return true }
+    return list[firstFallback...].allSatisfy { $0.fairnessDisplayStatus == .verifiedAdditional }
+}
+
+do {
+    print("PR1. 10 FAIR / 0 FALLBACK -> NO MESSAGING")
+    let list = presentationList(fair: 10, fallback: 0, tag: "pr1")
+    expect(FairnessPresentation.notice(for: list, isSearching: false), .none, "no divider and no zero-fair message once finished")
+    expect(FairnessPresentation.notice(for: list, isSearching: true), .none, "no divider and no zero-fair message while searching")
+}
+
+for (fair, fallback) in [(7, 3), (4, 6), (1, 9)] {
+    print("PR2. \(fair) FAIR / \(fallback) FALLBACK -> DIVIDER BEFORE FIRST FALLBACK")
+    let list = presentationList(fair: fair, fallback: fallback, tag: "pr2-\(fair)")
+    expect(list.count, 10, "list is 10 long")
+    expect(isFairFirst(list), true, "fair-first ordering intact")
+    for searching in [false, true] {
+        let notice = FairnessPresentation.notice(for: list, isSearching: searching)
+        expect(notice, .otherOptionsDivider(beforeIndex: fair), "isSearching=\(searching): divider at index \(fair), the first fallback restaurant")
+        if case .otherOptionsDivider(let index) = notice {
+            expect(list[index].fairnessDisplayStatus, .verifiedAdditional, "isSearching=\(searching): restaurant after the divider is a fallback")
+            expect(list[index - 1].fairnessDisplayStatus, .fair, "isSearching=\(searching): restaurant before the divider is fair")
+        }
+    }
+}
+
+do {
+    print("PR3. 0 FAIR / 10 FALLBACK")
+    let list = presentationList(fair: 0, fallback: 10, tag: "pr3")
+    expect(list.allSatisfy { $0.fairnessDisplayStatus == .verifiedAdditional }, true, "every restaurant is a fallback")
+    expect(FairnessPresentation.notice(for: list, isSearching: true), .none, "while searching: no zero-fair message and no divider")
+    expect(FairnessPresentation.notice(for: list, isSearching: false), .noEvenlyMatchedOptions, "after search finishes: zero-fair message, no divider")
+}
+
+do {
+    print("PR4. EMPTY AND UNSTAMPED LISTS")
+    expect(FairnessPresentation.notice(for: [], isSearching: false), .none, "empty list -> nothing")
+    let unstamped = [makeRestaurant("pr4-a"), makeRestaurant("pr4-b")]
+    expect(FairnessPresentation.notice(for: unstamped, isSearching: false), .none, "restaurants without a fairness status -> nothing")
+}
+
+do {
+    print("PR5. PROGRESSIVE: 3 FAIR -> 6 FAIR -> 6 FAIR + 4 FALLBACK")
+    let fair = (0..<6).map { makeRestaurant("pr5-fair\($0)") }
+    let fallback = (0..<4).map { makeRestaurant("pr5-fallback\($0)") }
+    var cache: [String: (userETA: TimeInterval, friendETA: TimeInterval)] = [:]
+    for r in fallback { cache[r.id] = etaPair(excessSeconds: 90) }
+
+    let snap1 = ETAVerificationDecision.buildDisplayList(fair: Array(fair.prefix(3)), verifiedUnfair: [], etaCache: cache, yelpOrderIndex: [:])
+    let snap2 = ETAVerificationDecision.buildDisplayList(fair: fair, verifiedUnfair: [], etaCache: cache, yelpOrderIndex: [:])
+    let snap3 = ETAVerificationDecision.buildDisplayList(fair: fair, verifiedUnfair: fallback, etaCache: cache, yelpOrderIndex: [:])
+
+    for (label, snap) in [("3 fair", snap1), ("6 fair", snap2), ("6 fair + 4 fallback", snap3)] {
+        expect(isFairFirst(snap), true, "\(label): fair-first ordering intact")
+    }
+    expect(FairnessPresentation.notice(for: snap1, isSearching: true), .none, "3 fair (searching): no messaging")
+    expect(FairnessPresentation.notice(for: snap2, isSearching: true), .none, "6 fair (searching): no messaging")
+    expect(FairnessPresentation.notice(for: snap3, isSearching: true), .otherOptionsDivider(beforeIndex: 6), "6 fair + 4 fallback (searching): divider appears live before index 6")
+    expect(FairnessPresentation.notice(for: snap3, isSearching: false), .otherOptionsDivider(beforeIndex: 6), "6 fair + 4 fallback (finished): same divider")
+
+    // A fallback-only early snapshot must not claim "no fair options" while
+    // the search runs, and the message must disappear if fair results later
+    // displace fallback ones.
+    let early = ETAVerificationDecision.buildDisplayList(fair: [], verifiedUnfair: fallback, etaCache: cache, yelpOrderIndex: [:])
+    expect(FairnessPresentation.notice(for: early, isSearching: true), .none, "fallback-only early snapshot while searching: no zero-fair message")
+    let displaced = ETAVerificationDecision.buildDisplayList(fair: fair, verifiedUnfair: fallback, etaCache: cache, yelpOrderIndex: [:])
+    expect(displaced.prefix(6).allSatisfy { $0.fairnessDisplayStatus == .fair }, true, "later fair results sort above the fallback ones")
+    expect(FairnessPresentation.notice(for: displaced, isSearching: false), .otherOptionsDivider(beforeIndex: 6), "after fair results arrive the zero-fair state is gone; divider recomputed")
+}
+
+do {
+    print("PR6. .noFairRestaurants OUTCOME DECISION UNCHANGED")
+    expect(ETAVerificationDecision.finalOutcomeCase(verifiedCount: 0, additionalVerifiedCount: 0, roundWasReliable: true, yelpEverReturnedResults: true), .noFairRestaurants, "reliable round, Yelp returned results, nothing verified -> .noFairRestaurants")
+    expect(ETAVerificationDecision.finalOutcomeCase(verifiedCount: 0, additionalVerifiedCount: 10, roundWasReliable: true, yelpEverReturnedResults: true), .limitedFairOptions, "zero fair + verified fallback -> .limitedFairOptions (shown, not an error)")
 }
 
 print("")

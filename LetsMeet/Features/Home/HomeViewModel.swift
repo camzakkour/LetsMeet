@@ -624,8 +624,12 @@ final class HomeViewModel: ObservableObject {
                     guard !hadDisplayableResultsAlready else { break }
                     self.isShowingResults = false
                     self.restaurants = []
-                    self.errorTitle = "No Fair Options"
-                    self.errorMessage = "We found restaurants nearby, but none had fair travel times for both of you. Please try a different address."
+                    // Yelp returned restaurants but none could be verified and
+                    // displayed. Restaurants that were verified but less
+                    // balanced are shown via `.limitedFairOptions`, so this
+                    // must not claim they failed a fairness check.
+                    self.errorTitle = "No Results to Show"
+                    self.errorMessage = "We found restaurants nearby, but couldn't confirm travel times for any of them. Please try a different address."
 
                 case .noRestaurantsNearby:
                     guard !hadDisplayableResultsAlready else { break }
@@ -637,8 +641,7 @@ final class HomeViewModel: ObservableObject {
                 case .etaVerificationUnavailable:
                     // Distinct from `.noFairRestaurants`: this means travel
                     // times couldn't be reliably checked (most likely a
-                    // transient MapKit outage), not that the restaurants
-                    // found were unfair. Zero-verified-restaurants-and-
+                    // transient MapKit outage). Zero-verified-restaurants-and-
                     // unavailable still falls through to this Search Problem
                     // alert unchanged, per `hadDisplayableResultsAlready`.
                     guard !hadDisplayableResultsAlready else { break }

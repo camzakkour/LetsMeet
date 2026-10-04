@@ -53,9 +53,16 @@ struct RestaurantResultsSheet: View {
     }
 
     private var fullList: some View {
-        ScrollView {
+        let notice = FairnessPresentation.notice(for: restaurants, isSearching: isSearchInProgress)
+        return ScrollView {
             LazyVStack(spacing: 16) {
-                ForEach(restaurants) { restaurant in
+                if notice == .noEvenlyMatchedOptions {
+                    noEvenlyMatchedNotice
+                }
+                ForEach(Array(restaurants.enumerated()), id: \.element.id) { index, restaurant in
+                    if notice == .otherOptionsDivider(beforeIndex: index) {
+                        otherOptionsDivider
+                    }
                     RestaurantCardView(
                         restaurant: restaurant,
                         isExpanded: expandedRestaurantID == restaurant.id,
@@ -70,6 +77,44 @@ struct RestaurantResultsSheet: View {
             .padding(.bottom, 24)
         }
         .scrollDisabled(!isExpanded)
+    }
+
+    /// Part of the scrolling content (not the header), so it takes no
+    /// permanent space at the peek detent. Informational styling only.
+    private var otherOptionsDivider: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(FairnessPresentation.otherOptionsTitle)
+                .font(.subheadline.weight(.semibold))
+                .foregroundColor(.primary)
+            Text(FairnessPresentation.otherOptionsDetail)
+                .font(.footnote)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.top, 8)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isHeader)
+    }
+
+    private var noEvenlyMatchedNotice: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "info.circle")
+                .font(.body)
+                .foregroundColor(.secondary)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(FairnessPresentation.noEvenlyMatchedTitle)
+                    .font(.subheadline.weight(.semibold))
+                    .foregroundColor(.primary)
+                Text(FairnessPresentation.noEvenlyMatchedDetail)
+                    .font(.footnote)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(Color(.tertiarySystemFill))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .accessibilityElement(children: .combine)
     }
 
     private func toggleExpansion(for id: String) {

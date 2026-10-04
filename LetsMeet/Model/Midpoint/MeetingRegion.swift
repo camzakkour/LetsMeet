@@ -303,9 +303,16 @@ struct MeetingRegion {
 enum MeetingPlaceOutcome {
     /// 3+ restaurants verified fair for both travelers via real bidirectional ETAs.
     case success(restaurants: [Restaurant])
-    /// 1-2 verified-fair restaurants after bounded search attempts were exhausted.
+    /// Fewer than 3 verified-fair restaurants (possibly zero) after bounded
+    /// search attempts were exhausted, but at least one displayable
+    /// restaurant: fair ones first, then ETA-verified but less balanced
+    /// alternatives (see `Restaurant.fairnessDisplayStatus`). A usable
+    /// result, not an error - the results UI marks any fallback restaurants.
     case limitedFairOptions(restaurants: [Restaurant])
-    /// Restaurants were found near the search region, but none verified fair.
+    /// Yelp returned restaurants near the search region, but none could
+    /// ultimately be verified and displayed - not even as a less balanced
+    /// alternative. This does NOT mean restaurants were checked and failed
+    /// the fairness rule: those are shown via `.limitedFairOptions`.
     case noFairRestaurants
     /// Yelp returned no meaningful restaurants near the search region at all.
     case noRestaurantsNearby
@@ -313,10 +320,10 @@ enum MeetingPlaceOutcome {
     case searchFailed(YelpManagerError)
     /// Yelp returned restaurants, but too many bidirectional ETA requests
     /// failed (even after bounded retries) to reliably verify fairness for
-    /// any of them. Distinct from `.noFairRestaurants`, which means
-    /// restaurants WERE verified and none passed - this means verification
-    /// itself was unreliable, most likely a transient MapKit outage, so it
-    /// must never be reported to the user as "no fair restaurants."
+    /// any of them. Distinct from `.noFairRestaurants`, where verification
+    /// itself was considered reliable - this means verification was
+    /// unreliable, most likely a transient MapKit outage, so it must never
+    /// be reported to the user as "no fair restaurants."
     case etaVerificationUnavailable
 }
 
