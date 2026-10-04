@@ -186,6 +186,12 @@ struct HomeMapView: View {
                 .presentationDetents([HomeMapView.peekResultsDetent, .large], selection: $resultsDetent)
                 .presentationDragIndicator(.visible)
                 .presentationBackgroundInteraction(.enabled(upThrough: HomeMapView.peekResultsDetent))
+                // Peek is the lowest the sheet goes. Swiping it fully away
+                // would flip `isShowingResults` and bring back the Home card
+                // while the results are still on the map; the Let's Meet
+                // badge (`resetToHome()`) is the way to leave results, and it
+                // still dismisses the sheet programmatically.
+                .interactiveDismissDisabled()
         }
         .sheet(isPresented: $isShowingSettings) {
             SettingsView()
