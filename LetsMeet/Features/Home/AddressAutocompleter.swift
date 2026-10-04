@@ -30,8 +30,10 @@ struct ResolvedFriendLocation {
 /// suggestion list - manual entry always keeps working.
 final class AddressAutocompleter: NSObject, MKLocalSearchCompleterDelegate {
 
-    /// Called on the main thread whenever the suggestion list changes.
-    var onSuggestionsChanged: (([AddressSuggestion]) -> Void)?
+    /// Called on the main thread whenever the suggestion list changes, with
+    /// the completer's query at that moment so the receiver can tell whether
+    /// the list belongs to the text currently in the field.
+    var onSuggestionsChanged: (([AddressSuggestion], String) -> Void)?
 
     private let completer = MKLocalSearchCompleter()
     private static let maxSuggestions = 8
@@ -50,7 +52,7 @@ final class AddressAutocompleter: NSObject, MKLocalSearchCompleterDelegate {
     func cancel() {
         completer.cancel()
         completer.queryFragment = ""
-        onSuggestionsChanged?([])
+        onSuggestionsChanged?([], "")
     }
 
     /// Resolves a completion to a coordinate and a readable address string.
@@ -69,12 +71,8 @@ final class AddressAutocompleter: NSObject, MKLocalSearchCompleterDelegate {
 
     private static func displayText(for item: MKMapItem, fallback suggestion: AddressSuggestion) -> String {
         let placemark = item.placemark
-        let street = [placemark.subThoroughfare, placemark.thoroughfare]
-            .compactMap { $0 }
-            .joined(separator: " ")
-        let region = [placemark.locality, placemark.administrativeArea]
-            .compactMap { $0 }
-            .joined(separator: ", ")
+        let street = FriendAddressRules.streetLine(subThoroughfare: placemark.subThoroughfare, thoroughfare: placemark.thoroughfare)
+        let region = FriendAddressRules.cityState(locality: placemark.locality, administrativeArea: placemark.administrativeArea)
 
         // Named places (businesses, landmarks) lead with their name.
         let lead = item.pointOfInterestCategory != nil ? (item.name ?? street) : street
@@ -91,10 +89,10 @@ final class AddressAutocompleter: NSObject, MKLocalSearchCompleterDelegate {
             .filter { !$0.title.isEmpty }
             .prefix(Self.maxSuggestions)
             .map { AddressSuggestion(title: $0.title, subtitle: $0.subtitle, completion: $0) }
-        onSuggestionsChanged?(Array(suggestions))
+        onSuggestionsChanged?(Array(suggestions), completer.queryFragment)
     }
 
     func completer(_ completer: MKLocalSearchCompleter, didFailWithError error: Error) {
-        onSuggestionsChanged?([])
+        onSuggestionsChanged?([], completer.queryFragment)
     }
 }

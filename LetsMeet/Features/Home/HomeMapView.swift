@@ -89,6 +89,26 @@ struct HomeMapView: View {
                 VStack {
                     Spacer()
                     bottomCard
+                        // Its own node, so it can't collide with the alerts
+                        // on the root view or on the stack around it.
+                        .alert(
+                            "Confirm Address",
+                            isPresented: Binding(
+                                get: { viewModel.addressToConfirm != nil },
+                                set: { isPresented in
+                                    if !isPresented && viewModel.addressToConfirm != nil { viewModel.editAddress() }
+                                }
+                            ),
+                            presenting: viewModel.addressToConfirm
+                        ) { candidate in
+                            Button("Use This Address") { viewModel.confirmAddress(candidate) }
+                            Button("Edit") {
+                                viewModel.editAddress()
+                                isAddressFieldFocused = true
+                            }
+                        } message: { candidate in
+                            Text("\(candidate.street)\n\(candidate.region)")
+                        }
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
                 // Attached to this node rather than the root so it can't
@@ -132,6 +152,11 @@ struct HomeMapView: View {
         }
         .onChange(of: viewModel.restaurants) { _ in
             fitMapToRestaurants()
+        }
+        // Find found several equally good suggestions: bring the field (and
+        // with it the existing dropdown) back so the user can pick one.
+        .onChange(of: viewModel.suggestionChoiceRequest) { _ in
+            isAddressFieldFocused = true
         }
         .onChange(of: resultsDetent) { _, detent in
             if detent == HomeMapView.peekResultsDetent {
@@ -464,7 +489,7 @@ struct HomeMapView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text("Who are you meeting?")
                     .font(.title3.bold())
-                Text("Add your friend's address or location.")
+                Text(viewModel.needsSuggestionChoice ? "Select the correct address below." : "Add your friend's address or location.")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
