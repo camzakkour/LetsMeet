@@ -3,9 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>LetsMeet uses your location to find a restaurant that's a fair midpoint between you and your friend.</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>LetsMeet uses your location to find a restaurant that's a fair midpoint between you and your friend.</string>
+	<string>Let's Meet is a location based app. We use your location to meet with your friends in the middle.</string>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
 		<string>comgooglemaps</string>

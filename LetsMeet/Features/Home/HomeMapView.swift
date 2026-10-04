@@ -11,6 +11,7 @@ struct HomeMapView: View {
     @ObservedObject var viewModel: HomeViewModel
     @StateObject private var locationProvider = LocationProvider()
     @AppStorage("appMapStyle") private var mapStylePreference: AppMapStyle = .standard
+    @Environment(\.openURL) private var openURL
 
     @State private var cameraPosition: MapCameraPosition = .region(
         MKCoordinateRegion(
@@ -26,6 +27,9 @@ struct HomeMapView: View {
     /// height - the card itself is laid out exactly as before.
     @State private var keyboardTopY: CGFloat?
     @State private var resultsDetent: PresentationDetent = .large
+    /// The location state to explain in an alert after a blocked "Find a
+    /// place" tap; nil when no location alert is showing.
+    @State private var locationAlertState: LocationAvailability?
 
     /// Tall enough to show the full "Restaurants near your midpoint" header
     /// (~67pt: 12pt top padding + title3 line + 2pt spacing + subheadline
@@ -87,6 +91,24 @@ struct HomeMapView: View {
                     bottomCard
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
+                // Attached to this node rather than the root so it can't
+                // collide with the existing error alert on the root view.
+                .alert(
+                    locationAlertTitle,
+                    isPresented: Binding(
+                        get: { locationAlertState != nil },
+                        set: { isPresented in if !isPresented { locationAlertState = nil } }
+                    )
+                ) {
+                    if locationAlertState == .denied {
+                        Button("Open Settings") { openAppSettings() }
+                        Button("Cancel", role: .cancel) { }
+                    } else {
+                        Button("OK", role: .cancel) { }
+                    }
+                } message: {
+                    Text(locationAlertMessage)
+                }
             }
         }
         .animation(.easeInOut, value: viewModel.isShowingResults)
@@ -97,7 +119,14 @@ struct HomeMapView: View {
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
             keyboardTopY = nil
         }
-        .onAppear { locationProvider.requestLocation() }
+        .onAppear { locationProvider.start() }
+        // Picks up a change made while the app was away (permission granted
+        // in Settings, Location Services turned back on). Notification-based
+        // rather than `scenePhase`, which isn't reliably driven when SwiftUI
+        // is hosted by a UIHostingController under a UIKit scene delegate.
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+            locationProvider.start()
+        }
         .onChange(of: locationProvider.currentCoordinate?.latitude) { _ in
             recenterOnUserIfNeeded()
         }
@@ -375,6 +404,61 @@ struct HomeMapView: View {
         .shadow(color: .black.opacity(0.18), radius: 8, y: 4)
     }
 
+    /// The "Find a place" entry point. Location availability is checked first,
+    /// before address validation or geocoding, because without a usable
+    /// location no search can succeed.
+    private func findTapped() {
+        let availability = locationProvider.availability
+        guard availability == .available else {
+            if availability == .notDetermined || availability == .acquiring || availability == .failed {
+                locationProvider.start()
+            }
+            locationAlertState = availability
+            return
+        }
+        viewModel.findAPlace()
+    }
+
+    private func openAppSettings() {
+        guard let url = URL(string: UIApplication.openSettingsURLString) else { return }
+        openURL(url)
+    }
+
+    private var locationAlertTitle: String {
+        switch locationAlertState {
+        case .denied: return "Location Access Is Off"
+        case .servicesDisabled: return "Location Services Are Off"
+        case .restricted: return "Location Is Restricted"
+        case .failed: return "Couldn't Get Your Location"
+        default: return "Finding Your Location"
+        }
+    }
+
+    private var locationAlertMessage: String {
+        switch locationAlertState {
+        case .denied:
+            return "Let's Meet needs your location to find a fair meeting spot. Turn on Location for Let's Meet in Settings."
+        case .servicesDisabled:
+            return "Turn on Location Services in Settings \u{203A} Privacy & Security \u{203A} Location Services."
+        case .restricted:
+            return "Location access is restricted on this device (for example by Screen Time or device management), so Let's Meet can't find your location."
+        case .failed:
+            return "Let's Meet couldn't determine your location. Please try again."
+        default:
+            return "Let's Meet is still getting your location. Try again in a moment."
+        }
+    }
+
+    private var locationStatusText: String {
+        switch locationProvider.availability {
+        case .available: return "Your location: Current Location"
+        case .notDetermined, .acquiring: return "Finding your location\u{2026}"
+        case .denied, .servicesDisabled: return "Location is off"
+        case .restricted: return "Location is restricted"
+        case .failed: return "Can't get your location"
+        }
+    }
+
     private var bottomCard: some View {
         VStack(alignment: .leading, spacing: 16) {
             VStack(alignment: .leading, spacing: 4) {
@@ -416,13 +500,13 @@ struct HomeMapView: View {
             HStack(spacing: 8) {
                 Image(systemName: "location.fill")
                     .foregroundColor(LetsMeetColor.lightBlue)
-                Text("Your location: Current Location")
+                Text(locationStatusText)
                     .font(.footnote)
                     .foregroundColor(.secondary)
                 Spacer()
             }
 
-            Button(action: viewModel.findAPlace) {
+            Button(action: findTapped) {
                 HStack(spacing: 8) {
                     if viewModel.isSearching {
                         ProgressView()
