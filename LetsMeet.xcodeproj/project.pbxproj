@@ -11,6 +11,7 @@
 		0E600E20F8887EB410DBA8A8 /* RestaurantFairnessSelector.swift in Sources */ = {isa = PBXBuildFile; fileRef = B497EAEAC35199FD46CD8254 /* RestaurantFairnessSelector.swift */; };
 		3FA8E66FF0424598B006D415 /* ETAVerificationDecision.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6734130BD8E4E9D8BA43718 /* ETAVerificationDecision.swift */; };
 		4A2BFBC59B614D66A2DB4629 /* LegSchedulerState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C7BA6C7891C4E71BEBC9C1B /* LegSchedulerState.swift */; };
+		7E3C9A1D5B2F48A6A1D0C4E7 /* SearchCancellationToken.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5D8B2E6F1A9C47B3B2E1D5F8 /* SearchCancellationToken.swift */; };
 		120242747728C7CEA31827F7 /* HomeMapView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A525F7F1122F10D3D89EDD76 /* HomeMapView.swift */; };
 		BB02F00100000000000FA002 /* FairnessPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB02F00100000000000FA001 /* FairnessPresentation.swift */; };
 		20E1E4C7AD1914259A888DE3 /* RestaurantResultsSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E65926C85AD5E7849CC7F3C /* RestaurantResultsSheet.swift */; };
@@ -65,6 +66,7 @@
 		B497EAEAC35199FD46CD8254 /* RestaurantFairnessSelector.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RestaurantFairnessSelector.swift; sourceTree = "<group>"; };
 		E6734130BD8E4E9D8BA43718 /* ETAVerificationDecision.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ETAVerificationDecision.swift; sourceTree = "<group>"; };
 		1C7BA6C7891C4E71BEBC9C1B /* LegSchedulerState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = LegSchedulerState.swift; sourceTree = "<group>"; };
+		5D8B2E6F1A9C47B3B2E1D5F8 /* SearchCancellationToken.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SearchCancellationToken.swift; sourceTree = "<group>"; };
 		424B3A66BC49721A02A8565A /* MapApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MapApp.swift; sourceTree = "<group>"; };
 		BB171A612AB25E49006CBDD5 /* config.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = config.plist; sourceTree = "<group>"; };
 		BB333962281C9F8E00A2142E /* LetsMeet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LetsMeet.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -103,6 +105,7 @@
 				9401900B24E14F09840EC1BF /* RoutePolylineMath.swift */,
 				E6734130BD8E4E9D8BA43718 /* ETAVerificationDecision.swift */,
 				1C7BA6C7891C4E71BEBC9C1B /* LegSchedulerState.swift */,
+				5D8B2E6F1A9C47B3B2E1D5F8 /* SearchCancellationToken.swift */,
 				B497EAEAC35199FD46CD8254 /* RestaurantFairnessSelector.swift */,
 				7B9C15422793405AA06DA412 /* MeetingPlaceFinder.swift */,
 			);
@@ -353,6 +356,7 @@
 				BA0A85303D1D4132B8B01211 /* RoutePolylineMath.swift in Sources */,
 				3FA8E66FF0424598B006D415 /* ETAVerificationDecision.swift in Sources */,
 				4A2BFBC59B614D66A2DB4629 /* LegSchedulerState.swift in Sources */,
+				7E3C9A1D5B2F48A6A1D0C4E7 /* SearchCancellationToken.swift in Sources */,
 				0E600E20F8887EB410DBA8A8 /* RestaurantFairnessSelector.swift in Sources */,
 				B0FF834701DE6DAB9048004B /* MeetingPlaceFinder.swift in Sources */,
 				A0C0FFEE0000000000000011 /* AppPreferences.swift in Sources */,

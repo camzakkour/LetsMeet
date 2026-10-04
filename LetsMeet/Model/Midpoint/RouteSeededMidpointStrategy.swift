@@ -56,6 +56,7 @@ final class RouteSeededMidpointStrategy: MidpointStrategy {
         userLocation: CLLocation,
         friendLocation: CLLocation,
         searchID: String,
+        cancellationToken: SearchCancellationToken,
         completion: @escaping (MeetingRegion) -> Void
     ) {
         let originalMidpoint = LocationUtility.shared.geographicMidpoint(
@@ -75,8 +76,12 @@ final class RouteSeededMidpointStrategy: MidpointStrategy {
         let routeStageStart = CFAbsoluteTimeGetCurrent()
         #endif
 
-        requestRoute(from: userLocation, to: friendLocation) { [weak self] route, error in
+        requestRoute(from: userLocation, to: friendLocation, cancellationToken: cancellationToken) { [weak self] route, error in
             guard let self = self else { return }
+            // The route request was in flight at cancellation and is left to
+            // finish; its result must not start seed ETA work (or fall back
+            // to the geographic seed and go on to Yelp).
+            guard SearchCancellationGate.shouldContinue(cancellationToken) else { return }
             diagnostics.mapKitRequestCount += 1
             #if DEBUG
             diagnostics.routeDuration = CFAbsoluteTimeGetCurrent() - routeStageStart
@@ -116,7 +121,8 @@ final class RouteSeededMidpointStrategy: MidpointStrategy {
                 route: route,
                 userLocation: userLocation,
                 friendLocation: friendLocation,
-                diagnostics: diagnostics
+                diagnostics: diagnostics,
+                cancellationToken: cancellationToken
             ) { finalFraction, finalCoordinate in
                 #if DEBUG
                 diagnostics.midpointCorrectionDuration = CFAbsoluteTimeGetCurrent() - correctionsStageStart
@@ -146,6 +152,7 @@ final class RouteSeededMidpointStrategy: MidpointStrategy {
         userLocation: CLLocation,
         friendLocation: CLLocation,
         diagnostics: MidpointDiagnostics,
+        cancellationToken: SearchCancellationToken,
         completion: @escaping (Double, CLLocationCoordinate2D) -> Void
     ) {
         let initialFraction = 0.5
@@ -161,6 +168,9 @@ final class RouteSeededMidpointStrategy: MidpointStrategy {
 
         etaPair(for: initialCoordinate, userLocation: userLocation, friendLocation: friendLocation, diagnostics: diagnostics) { [weak self] pair in
             guard let self = self else { return }
+            // The initial seed ETA pair finished; don't go on to corrections
+            // (or the hand-off to Yelp) for a cancelled search.
+            guard SearchCancellationGate.shouldContinue(cancellationToken) else { return }
             diagnostics.mapKitRequestCount += 2
 
             guard let (userETA, friendETA) = pair else {
@@ -219,6 +229,7 @@ final class RouteSeededMidpointStrategy: MidpointStrategy {
                 userLocation: userLocation,
                 friendLocation: friendLocation,
                 diagnostics: diagnostics,
+                cancellationToken: cancellationToken,
                 completion: completion
             )
         }
@@ -241,6 +252,7 @@ final class RouteSeededMidpointStrategy: MidpointStrategy {
         userLocation: CLLocation,
         friendLocation: CLLocation,
         diagnostics: MidpointDiagnostics,
+        cancellationToken: SearchCancellationToken,
         completion: @escaping (Double, CLLocationCoordinate2D) -> Void
     ) {
         guard attemptIndex <= MidpointFairnessConfig.maxSeedCorrections else {
@@ -277,6 +289,9 @@ final class RouteSeededMidpointStrategy: MidpointStrategy {
 
         etaPair(for: candidateCoordinate, userLocation: userLocation, friendLocation: friendLocation, diagnostics: diagnostics) { [weak self] pair in
             guard let self = self else { return }
+            // This correction's ETA pair finished; don't chain another
+            // correction (or hand off to Yelp) for a cancelled search.
+            guard SearchCancellationGate.shouldContinue(cancellationToken) else { return }
             diagnostics.mapKitRequestCount += 2
 
             guard let (userETA, friendETA) = pair else {
@@ -341,6 +356,7 @@ final class RouteSeededMidpointStrategy: MidpointStrategy {
                 userLocation: userLocation,
                 friendLocation: friendLocation,
                 diagnostics: diagnostics,
+                cancellationToken: cancellationToken,
                 completion: completion
             )
         }
@@ -352,6 +368,7 @@ final class RouteSeededMidpointStrategy: MidpointStrategy {
         from origin: CLLocation,
         to destination: CLLocation,
         attempt: Int = 0,
+        cancellationToken: SearchCancellationToken,
         completion: @escaping (MKRoute?, Error?) -> Void
     ) {
         let request = MKDirections.Request()
@@ -372,7 +389,9 @@ final class RouteSeededMidpointStrategy: MidpointStrategy {
                 completion(nil, error)
                 return
             }
-            self.requestRoute(from: origin, to: destination, attempt: attempt + 1, completion: completion)
+            // Don't spend the one route retry on a cancelled search.
+            guard SearchCancellationGate.shouldContinue(cancellationToken) else { return }
+            self.requestRoute(from: origin, to: destination, attempt: attempt + 1, cancellationToken: cancellationToken, completion: completion)
         }
     }
 

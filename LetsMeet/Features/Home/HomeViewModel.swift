@@ -76,10 +76,19 @@ final class HomeViewModel: ObservableObject {
     /// outcome) captures its own `searchID` and must compare it against this
     /// property before mutating any `@Published` state - a callback whose
     /// searchID no longer matches belongs to a superseded search and is
-    /// ignored. This is a plain staleness check, not cancellation: a stale
-    /// search is left to finish its work (MapKit requests already in flight
-    /// aren't aborted), its late result is just never applied to the UI.
+    /// ignored. This is a plain staleness check: a stale search's late result
+    /// is never applied to the UI. Stopping its further work is the job of
+    /// `activeSearchToken` below (requests already in flight still finish).
     private var activeSearchID: String?
+
+    /// Cooperative-cancellation token for the search `activeSearchID` names,
+    /// installed and retired in lockstep with it: `findAPlace()` cancels the
+    /// previous token before installing its own, and `resetToHome()` cancels
+    /// it. Cancelling only stops that search from scheduling further work
+    /// (see `SearchCancellationToken`); `activeSearchID` still independently
+    /// guards every UI mutation. Each search captures its own token, so
+    /// cancelling one never affects another.
+    private var activeSearchToken: SearchCancellationToken?
 
     /// A street-level manual-geocoding result waiting for the user's "Use This
     /// Address" before any search starts. Set only by the manual fallback;
@@ -318,6 +327,8 @@ final class HomeViewModel: ObservableObject {
     /// Deliberately leaves location/permission state untouched.
     func resetToHome() {
         activeSearchID = nil
+        activeSearchToken?.cancel()
+        activeSearchToken = nil
         invalidateAddressWork()
         isSearching = false
         isShowingResults = false
@@ -329,6 +340,9 @@ final class HomeViewModel: ObservableObject {
     func findAPlace() {
         let searchID = String(UUID().uuidString.prefix(8))
         activeSearchID = searchID
+        activeSearchToken?.cancel()
+        let searchToken = SearchCancellationToken()
+        activeSearchToken = searchToken
         let wasAlreadySearching = isSearching
         // Cheap, always available (not gated behind #if DEBUG) purely so it
         // can be threaded through as a plain parameter below without
@@ -376,7 +390,7 @@ final class HomeViewModel: ObservableObject {
         """)
         Self.logger.log("[Timing][S9][\(searchID)] address resolution (autocomplete, cached) took \(addressResolutionDuration)s")
         #endif
-        resolveUserAndSearch(friendLocation: selected.location, searchID: searchID, searchStartTime: searchStartTime)
+        resolveUserAndSearch(friendLocation: selected.location, searchID: searchID, cancellationToken: searchToken, searchStartTime: searchStartTime)
     }
 
     // MARK: - Resolving typed text (Find without a trusted selection)
@@ -510,7 +524,7 @@ final class HomeViewModel: ObservableObject {
 
     /// Shared by the manual-geocoding and autocomplete-selection paths once a
     /// friend location is known.
-    private func resolveUserAndSearch(friendLocation: CLLocation, searchID: String, searchStartTime: CFAbsoluteTime) {
+    private func resolveUserAndSearch(friendLocation: CLLocation, searchID: String, cancellationToken: SearchCancellationToken, searchStartTime: CFAbsoluteTime) {
         guard let userLocation = YelpManager.shared.currentUserLocation else {
             #if DEBUG
             Self.logger.log("[S9][\(searchID)] user location UNAVAILABLE - aborting search")
@@ -523,7 +537,7 @@ final class HomeViewModel: ObservableObject {
 
         YelpManager.shared.friendLocation = friendLocation
         friendCoordinate = friendLocation.coordinate
-        searchForRestaurants(userLocation: userLocation, friendLocation: friendLocation, searchID: searchID, searchStartTime: searchStartTime)
+        searchForRestaurants(userLocation: userLocation, friendLocation: friendLocation, searchID: searchID, cancellationToken: cancellationToken, searchStartTime: searchStartTime)
     }
 
     /// Runs the route-seeded, restaurant-first search (see
@@ -531,8 +545,8 @@ final class HomeViewModel: ObservableObject {
     /// the legacy UIKit flow still uses. Every outcome case is handled
     /// explicitly so a limited or empty result is never silently presented
     /// as a normal, fully-fair success.
-    private func searchForRestaurants(userLocation: CLLocation, friendLocation: CLLocation, searchID: String, searchStartTime: CFAbsoluteTime) {
-        MeetingPlaceFinder.shared.findMeetingPlace(userLocation: userLocation, friendLocation: friendLocation, searchID: searchID, onProgress: { [weak self] snapshot in
+    private func searchForRestaurants(userLocation: CLLocation, friendLocation: CLLocation, searchID: String, cancellationToken: SearchCancellationToken, searchStartTime: CFAbsoluteTime) {
+        MeetingPlaceFinder.shared.findMeetingPlace(userLocation: userLocation, friendLocation: friendLocation, searchID: searchID, cancellationToken: cancellationToken, onProgress: { [weak self] snapshot in
             DispatchQueue.main.async {
                 guard let self = self else { return }
 

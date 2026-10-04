@@ -37,8 +37,11 @@ struct GeographicMidpointStrategy: MidpointStrategy {
         userLocation: CLLocation,
         friendLocation: CLLocation,
         searchID: String,
+        cancellationToken: SearchCancellationToken,
         completion: @escaping (MeetingRegion) -> Void
     ) {
+        // Purely computational and synchronous - nothing to schedule, so
+        // the token is accepted only to satisfy `MidpointStrategy`.
         let (center, radius) = Self.centerAndRadius(userLocation: userLocation, friendLocation: friendLocation)
 
         let diagnostics = MidpointDiagnostics(searchID: searchID, originalGeographicMidpoint: center)

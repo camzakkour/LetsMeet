@@ -39,6 +39,7 @@ final class MeetingPlaceFinder {
         userLocation: CLLocation,
         friendLocation: CLLocation,
         searchID: String,
+        cancellationToken: SearchCancellationToken,
         onProgress: @escaping ([Restaurant]) -> Void,
         completion: @escaping (MeetingPlaceOutcome) -> Void
     ) {
@@ -46,8 +47,13 @@ final class MeetingPlaceFinder {
         Self.logger.log("🔍 [Midpoint][S9][\(searchID)] MeetingPlaceFinder search started")
         #endif
 
-        midpointStrategy.findMeetingRegion(userLocation: userLocation, friendLocation: friendLocation, searchID: searchID) { [weak self] region in
+        midpointStrategy.findMeetingRegion(userLocation: userLocation, friendLocation: friendLocation, searchID: searchID, cancellationToken: cancellationToken) { [weak self] region in
             guard let self = self else { return }
+            // Catch-all hand-off gate: also covers the strategy paths that
+            // finish without a further async step. A cancelled search must
+            // neither publish its midpoint to the shared `YelpManager` nor
+            // start the Yelp/ETA stage.
+            guard SearchCancellationGate.shouldContinue(cancellationToken) else { return }
 
             // Kept in sync for HomeMapView, which reads this directly when
             // fitting the map to the current results.
@@ -58,8 +64,13 @@ final class MeetingPlaceFinder {
                 userLocation: userLocation,
                 friendLocation: friendLocation,
                 diagnostics: region.diagnostics,
+                cancellationToken: cancellationToken,
                 onProgress: onProgress
             ) { outcome in
+                // A search cancelled while its last stage was finishing must
+                // not publish its route/midpoint/radius to the shared
+                // `YelpManager`, where a newer search may already be reading.
+                guard SearchCancellationGate.shouldContinue(cancellationToken) else { return }
                 self.updateVisualizationMetadata(region: region)
                 self.logDiagnosticsIfNeeded(region.diagnostics, outcome: outcome)
                 self.logTimingSummaryIfNeeded(region.diagnostics)

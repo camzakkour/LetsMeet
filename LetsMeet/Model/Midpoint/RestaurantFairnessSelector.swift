@@ -33,6 +33,7 @@ final class RestaurantFairnessSelector {
         userLocation: CLLocation,
         friendLocation: CLLocation,
         diagnostics: MidpointDiagnostics?,
+        cancellationToken: SearchCancellationToken,
         onProgress: @escaping ([Restaurant]) -> Void,
         completion: @escaping (MeetingPlaceOutcome) -> Void
     ) {
@@ -58,6 +59,7 @@ final class RestaurantFairnessSelector {
             corridorShiftsUsed: 0,
             searchedCenters: [(fraction: seedFraction, coordinate: region.center)],
             diagnostics: diagnostics,
+            cancellationToken: cancellationToken,
             onProgress: onProgress,
             completion: completion
         )
@@ -86,9 +88,15 @@ final class RestaurantFairnessSelector {
         corridorShiftsUsed: Int,
         searchedCenters: [(fraction: Double, coordinate: CLLocationCoordinate2D)],
         diagnostics: MidpointDiagnostics?,
+        cancellationToken: SearchCancellationToken,
         onProgress: @escaping ([Restaurant]) -> Void,
         completion: @escaping (MeetingPlaceOutcome) -> Void
     ) {
+        // A cancelled search ends silently here - this is the one point every
+        // round (the first and each radius-expansion / corridor-shift
+        // recursion) passes through before issuing its Yelp request.
+        guard SearchCancellationGate.shouldContinue(cancellationToken) else { return }
+
         #if DEBUG
         Self.logger.log("""
         [S9][\(diagnostics?.searchID ?? "?")] round \(roundIndex) (\(reason.rawValue)) Yelp search START: \
@@ -102,6 +110,10 @@ final class RestaurantFairnessSelector {
 
         YelpManager.shared.searchRestaurants(near: center, radiusMeters: radiusMeters) { [weak self] result in
             guard let self = self else { return }
+            // The request itself may have been in flight at cancellation and
+            // is left to finish; but its result must not start shortlist/ETA
+            // work, and a failure here must not surface as `.searchFailed`.
+            guard SearchCancellationGate.shouldContinue(cancellationToken) else { return }
 
             #if DEBUG
             let yelpCallDuration = CFAbsoluteTimeGetCurrent() - yelpCallStart
@@ -193,6 +205,7 @@ final class RestaurantFairnessSelector {
                     userLocation: userLocation,
                     friendLocation: friendLocation,
                     diagnostics: diagnostics,
+                    cancellationToken: cancellationToken,
                     onBatchProgress: { partialResults, partialDistances in
                         // Cumulative snapshot of everything resolved so far in
                         // THIS round's verification, merged on top of
@@ -492,6 +505,7 @@ final class RestaurantFairnessSelector {
                             corridorShiftsUsed: corridorShiftsUsed,
                             searchedCenters: searchedCenters,
                             diagnostics: diagnostics,
+                            cancellationToken: cancellationToken,
                             onProgress: onProgress,
                             completion: completion
                         )
@@ -557,6 +571,7 @@ final class RestaurantFairnessSelector {
                             corridorShiftsUsed: corridorShiftsUsed + 1,
                             searchedCenters: searchedCenters + [(fraction: shift.fraction, coordinate: shift.coordinate)],
                             diagnostics: diagnostics,
+                            cancellationToken: cancellationToken,
                             onProgress: onProgress,
                             completion: completion
                         )
@@ -880,6 +895,7 @@ final class RestaurantFairnessSelector {
         userLocation: CLLocation,
         friendLocation: CLLocation,
         diagnostics: MidpointDiagnostics?,
+        cancellationToken: SearchCancellationToken,
         onBatchProgress: @escaping ([String: (userETA: TimeInterval, friendETA: TimeInterval)], [String: (userDistance: Double, friendDistance: Double)]) -> Void,
         completion: @escaping ([String: (userETA: TimeInterval, friendETA: TimeInterval)], [String: (userDistance: Double, friendDistance: Double)], Int) -> Void
     ) {
@@ -894,7 +910,7 @@ final class RestaurantFairnessSelector {
         // reports the same cumulative "everything resolved so far" snapshot.
         let reportProgress = { onBatchProgress(state.verifiedResults(), state.verifiedDistances()) }
 
-        runPass(restaurants, passName: "primary", state: state, userLocation: userLocation, friendLocation: friendLocation, diagnostics: diagnostics, onBatchProgress: reportProgress) {
+        runPass(restaurants, passName: "primary", state: state, userLocation: userLocation, friendLocation: friendLocation, diagnostics: diagnostics, cancellationToken: cancellationToken, onBatchProgress: reportProgress) {
             let pending = restaurants.filter { state.isPending($0.id) }
             guard !pending.isEmpty else {
                 #if DEBUG
@@ -916,7 +932,7 @@ final class RestaurantFairnessSelector {
             #endif
 
             DispatchQueue.main.asyncAfter(deadline: .now() + MidpointFairnessConfig.batchRecoveryDelaySeconds) {
-                self.runPass(pending, passName: "recovery", state: state, userLocation: userLocation, friendLocation: friendLocation, diagnostics: diagnostics, onBatchProgress: reportProgress) {
+                self.runPass(pending, passName: "recovery", state: state, userLocation: userLocation, friendLocation: friendLocation, diagnostics: diagnostics, cancellationToken: cancellationToken, onBatchProgress: reportProgress) {
                     #if DEBUG
                     let recoveredCount = pending.filter { state.userLegPending($0.id) == false && state.friendLegPending($0.id) == false }.count
                     Self.logger.log("""
@@ -957,6 +973,7 @@ final class RestaurantFairnessSelector {
         userLocation: CLLocation,
         friendLocation: CLLocation,
         diagnostics: MidpointDiagnostics?,
+        cancellationToken: SearchCancellationToken,
         onBatchProgress: @escaping () -> Void,
         passCompletion: @escaping () -> Void
     ) {
@@ -991,6 +1008,15 @@ final class RestaurantFairnessSelector {
         var circuitTripped = false
 
         func runBatch(_ index: Int) {
+            // Every batch start funnels through here: the first batch of the
+            // primary pass, each batch resumed after the pacing delay, and
+            // the first batch of the recovery pass once its backoff elapses.
+            // Returning without `passCompletion()` ends the whole chain
+            // silently - no later batch, no recovery pass, no round
+            // continuation - and is not counted as a leg failure or a
+            // circuit-breaker event. Already in-flight legs finish untouched.
+            guard SearchCancellationGate.shouldContinue(cancellationToken) else { return }
+
             guard !circuitTripped, index < batches.count else {
                 #if DEBUG
                 if circuitTripped {

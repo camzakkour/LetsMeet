@@ -336,6 +336,7 @@ protocol MidpointStrategy {
         userLocation: CLLocation,
         friendLocation: CLLocation,
         searchID: String,
+        cancellationToken: SearchCancellationToken,
         completion: @escaping (MeetingRegion) -> Void
     )
 }

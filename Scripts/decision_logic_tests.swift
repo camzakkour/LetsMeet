@@ -39,6 +39,7 @@
 //     LetsMeet/Model/YelpResults.swift \
 //     LetsMeet/Model/Midpoint/ETAVerificationDecision.swift \
 //     LetsMeet/Model/Midpoint/LegSchedulerState.swift \
+//     LetsMeet/Model/Midpoint/SearchCancellationToken.swift \
 //     LetsMeet/Features/Results/FairnessPresentation.swift \
 //     /tmp/main.swift \
 //     && /tmp/decision_logic_tests
@@ -54,6 +55,11 @@
 // results sheet's "Other options" divider and zero-fair message; the PR-*
 // scenarios at the end of this file exercise it against real
 // `buildDisplayList` output.
+//
+// SearchCancellationToken.swift (Foundation-only) is the per-search
+// cooperative-cancellation primitive; the CAN-* scenarios exercise the token
+// and the `SearchCancellationGate` every pipeline stage asks before
+// scheduling more work.
 
 import Foundation
 
@@ -1531,6 +1537,141 @@ do {
     expect(carriedAfter(sequence + [Round(attempted: 2, verified: 2)]), true, "a later round with real reliable evidence updates carried back to true")
     // And a reliable evidence round followed by an unreliable one carries false.
     expect(carriedAfter([Round(attempted: 4, verified: 4), Round(attempted: 4, verified: 0)]), false, "the most recent evidence round wins")
+}
+
+// MARK: - CAN. PER-SEARCH COOPERATIVE CANCELLATION
+// The selector/strategy can't be compiled into this harness (YelpManager /
+// MapKit), so these exercise the real token and gate directly, plus a small
+// scheduling loop that mirrors how the pipeline uses the gate: check before
+// starting each batch/round, never abort what already started.
+do {
+    print("CAN. SEARCH CANCELLATION TOKEN")
+
+    // 1. New token starts active.
+    let fresh = SearchCancellationToken()
+    expect(fresh.isCancelled, false, "new token starts active")
+
+    // 2. Cancelled token reports cancelled.
+    let cancelledToken = SearchCancellationToken()
+    cancelledToken.cancel()
+    expect(cancelledToken.isCancelled, true, "cancelled token reports cancelled")
+
+    // 3. Cancellation is idempotent.
+    let repeated = SearchCancellationToken()
+    repeated.cancel()
+    repeated.cancel()
+    repeated.cancel()
+    expect(repeated.isCancelled, true, "repeated cancel() leaves the token cancelled (no toggling, no crash)")
+
+    // 4. Cancellation is monotonic: nothing un-cancels it.
+    let monotonic = SearchCancellationToken()
+    var observations: [Bool] = []
+    observations.append(monotonic.isCancelled)
+    monotonic.cancel()
+    for _ in 0..<5 { observations.append(monotonic.isCancelled) }
+    expect(observations, [false, true, true, true, true, true], "once cancelled, every later read is cancelled")
+
+    // 5. Token A cancellation does not affect token B.
+    let tokenA = SearchCancellationToken()
+    let tokenB = SearchCancellationToken()
+    tokenA.cancel()
+    expect(tokenA.isCancelled, true, "A is cancelled")
+    expect(tokenB.isCancelled, false, "cancelling A leaves B active")
+    expect(SearchCancellationGate.shouldContinue(tokenB), true, "gate still allows B after A is cancelled")
+
+    // 6. Gate allows an active token.
+    expect(SearchCancellationGate.shouldContinue(SearchCancellationToken()), true, "gate allows an active token")
+
+    // 7. Gate rejects a cancelled token.
+    expect(SearchCancellationGate.shouldContinue(cancelledToken), false, "gate rejects a cancelled token")
+
+    // 8. Thread safety: many readers racing one canceller. Every reader must
+    //    see a monotonic sequence (false...false, true...true), never
+    //    true -> false, and every read after the join must be true.
+    let stressToken = SearchCancellationToken()
+    let readerCount = 8
+    let readsPerReader = 20_000
+    let resultsLock = NSLock()
+    var regressions = 0
+    var sawCancelledCount = 0
+    DispatchQueue.concurrentPerform(iterations: readerCount + 1) { worker in
+        if worker == readerCount {
+            // Let readers get going, then cancel (repeatedly, concurrently
+            // with the reads) to also stress idempotence.
+            for _ in 0..<1_000 { _ = stressToken.isCancelled }
+            for _ in 0..<50 { stressToken.cancel() }
+            return
+        }
+        var previous = false
+        var localRegressions = 0
+        var sawCancelled = false
+        for _ in 0..<readsPerReader {
+            let now = stressToken.isCancelled
+            if previous && !now { localRegressions += 1 }
+            if now { sawCancelled = true }
+            previous = now
+        }
+        resultsLock.lock()
+        regressions += localRegressions
+        if sawCancelled { sawCancelledCount += 1 }
+        resultsLock.unlock()
+    }
+    expect(regressions, 0, "concurrent readers never observe cancelled -> active")
+    expect(stressToken.isCancelled, true, "token is cancelled after the concurrent cancel() calls")
+
+    // Many independent tokens cancelled from many threads stay isolated:
+    // only the even-numbered ones are cancelled.
+    let tokens = (0..<200).map { _ in SearchCancellationToken() }
+    DispatchQueue.concurrentPerform(iterations: tokens.count) { index in
+        if index % 2 == 0 { tokens[index].cancel() }
+    }
+    let wrongState = tokens.enumerated().filter { $0.element.isCancelled != ($0.offset % 2 == 0) }.count
+    expect(wrongState, 0, "concurrent cancellation of 200 tokens affects only the ones cancelled")
+
+    // Scheduling loop mirroring runPass/runRound: the gate is asked before
+    // each batch starts; whatever already started always completes.
+    func runBatches(total: Int, token: SearchCancellationToken, cancelAfterStarting: Int?) -> (started: Int, completed: Int) {
+        var started = 0
+        var completed = 0
+        for _ in 0..<total {
+            guard SearchCancellationGate.shouldContinue(token) else { break }
+            started += 1
+            if let cancelAfterStarting, started == cancelAfterStarting { token.cancel() }
+            completed += 1 // the in-flight batch still finishes
+        }
+        return (started, completed)
+    }
+    let uncancelled = runBatches(total: 4, token: SearchCancellationToken(), cancelAfterStarting: nil)
+    expect(uncancelled.started, 4, "an active search starts every batch (behavior unchanged)")
+    expect(uncancelled.completed, 4, "an active search completes every batch")
+
+    let midRun = runBatches(total: 4, token: SearchCancellationToken(), cancelAfterStarting: 2)
+    expect(midRun.started, 2, "cancelled during batch 2: no batch 3 or 4 is started")
+    expect(midRun.completed, 2, "the in-flight batch 2 still finishes")
+
+    let beforeStart = runBatches(total: 4, token: { let t = SearchCancellationToken(); t.cancel(); return t }(), cancelAfterStarting: nil)
+    expect(beforeStart.started, 0, "a search cancelled before its first batch starts nothing")
+
+    // Round recursion: cancel after round 1 => rounds 2+ never begin; a second
+    // search with its own token runs all its rounds regardless.
+    func runRounds(maxRounds: Int, token: SearchCancellationToken, cancelDuringRound: Int?) -> Int {
+        var roundsStarted = 0
+        func round(_ index: Int) {
+            guard SearchCancellationGate.shouldContinue(token) else { return }
+            guard index < maxRounds else { return }
+            roundsStarted += 1
+            if cancelDuringRound == index { token.cancel() }
+            round(index + 1)
+        }
+        round(0)
+        return roundsStarted
+    }
+    let searchAToken = SearchCancellationToken()
+    let searchBToken = SearchCancellationToken()
+    let aRounds = runRounds(maxRounds: 4, token: searchAToken, cancelDuringRound: 1)
+    let bRounds = runRounds(maxRounds: 4, token: searchBToken, cancelDuringRound: nil)
+    expect(aRounds, 2, "recursive rounds stop after the cancelling round (A ran 2 of 4)")
+    expect(bRounds, 4, "search B with its own token still runs all 4 rounds")
 }
 
 print("")
