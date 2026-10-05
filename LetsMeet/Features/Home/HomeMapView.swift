@@ -478,8 +478,11 @@ struct HomeMapView: View {
 
     /// The "Find a place" entry point. Location availability is checked first,
     /// before address validation or geocoding, because without a usable
-    /// location no search can succeed.
+    /// location no search can succeed. The Find button and the address field's
+    /// Search key both call this, so they share one path. The button is
+    /// disabled while a search runs; the guard gives the key the same rule.
     private func findTapped() {
+        guard !viewModel.isSearching else { return }
         let availability = locationProvider.availability
         guard availability == .available else {
             if availability == .notDetermined || availability == .acquiring || availability == .failed {
@@ -548,6 +551,8 @@ struct HomeMapView: View {
                     .textFieldStyle(.plain)
                     .autocorrectionDisabled()
                     .focused($isAddressFieldFocused)
+                    .submitLabel(.search)
+                    .onSubmit(findTapped)
             }
             .padding(12)
             .background(Color(.secondarySystemBackground))

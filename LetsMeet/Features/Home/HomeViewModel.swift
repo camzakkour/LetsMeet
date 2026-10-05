@@ -379,6 +379,11 @@ final class HomeViewModel: ObservableObject {
         // Clean reset so a new search's progressive/terminal results can
         // never mix with whatever the previous search left displayed.
         clearSearchResultState()
+        // The shared route/radius are only rewritten when a search finishes,
+        // so without this the first progressive snapshot would copy the
+        // previous search's values onto the map.
+        YelpManager.shared.route = nil
+        YelpManager.shared.searchRadiusMeters = nil
 
         // The selection already has a reliable coordinate - never geocode the
         // same text again.
