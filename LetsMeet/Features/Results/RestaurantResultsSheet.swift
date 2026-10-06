@@ -5,6 +5,13 @@
 
 import SwiftUI
 
+/// One request to scroll a restaurant's card into view. The nonce makes every
+/// tap a distinct value, so re-tapping the same pin scrolls again.
+struct RestaurantScrollRequest: Equatable {
+    let restaurantID: String
+    let nonce = UUID()
+}
+
 /// The draggable results sheet presented over HomeMapView once Yelp results load:
 /// a vertically-scrolling list of restaurant cards between the meeting parties.
 ///
@@ -28,6 +35,11 @@ struct RestaurantResultsSheet: View {
     /// trailing loading row - removed the instant the search reaches its
     /// terminal outcome, regardless of how it resolves.
     let isSearchInProgress: Bool
+
+    /// A pending request (from tapping a map pin) to scroll a restaurant's
+    /// card into view. Honoured at any detent - programmatic scrolling is
+    /// independent of `isExpanded`'s user-scroll lock - and never changes it.
+    let scrollRequest: RestaurantScrollRequest?
 
     /// Which restaurant's expanded ("More Info") section is open, if any -
     /// at most one at a time. Deliberately NOT reset when `isExpanded`
@@ -54,29 +66,47 @@ struct RestaurantResultsSheet: View {
 
     private var fullList: some View {
         let notice = FairnessPresentation.notice(for: restaurants, isSearching: isSearchInProgress)
-        return ScrollView {
-            LazyVStack(spacing: 16) {
-                if notice == .noEvenlyMatchedOptions {
-                    noEvenlyMatchedNotice
-                }
-                ForEach(Array(restaurants.enumerated()), id: \.element.id) { index, restaurant in
-                    if notice == .otherOptionsDivider(beforeIndex: index) {
-                        otherOptionsDivider
+        return ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(spacing: 16) {
+                    if notice == .noEvenlyMatchedOptions {
+                        noEvenlyMatchedNotice
                     }
-                    RestaurantCardView(
-                        restaurant: restaurant,
-                        isExpanded: expandedRestaurantID == restaurant.id,
-                        onToggleExpand: { toggleExpansion(for: restaurant.id) }
-                    )
+                    ForEach(Array(restaurants.enumerated()), id: \.element.id) { index, restaurant in
+                        if notice == .otherOptionsDivider(beforeIndex: index) {
+                            otherOptionsDivider
+                        }
+                        RestaurantCardView(
+                            restaurant: restaurant,
+                            isExpanded: expandedRestaurantID == restaurant.id,
+                            onToggleExpand: { toggleExpansion(for: restaurant.id) }
+                        )
+                        .id(restaurant.id)
+                    }
+                    if isSearchInProgress {
+                        loadingRow
+                    }
                 }
-                if isSearchInProgress {
-                    loadingRow
+                .padding(.horizontal, 16)
+                .padding(.bottom, 24)
+            }
+            .scrollDisabled(!isExpanded)
+            .task(id: scrollRequest) {
+                guard let request = scrollRequest else { return }
+                withAnimation(.easeInOut) {
+                    proxy.scrollTo(request.restaurantID, anchor: .top)
+                }
+                // LazyVStack only estimates the height of cards it hasn't
+                // built yet, so a first jump past them lands short. Once that
+                // jump has built them, a second pass lands exactly. A newer
+                // request cancels this task, so a stale one never re-scrolls.
+                try? await Task.sleep(for: .milliseconds(450))
+                guard !Task.isCancelled else { return }
+                withAnimation(.easeInOut) {
+                    proxy.scrollTo(request.restaurantID, anchor: .top)
                 }
             }
-            .padding(.horizontal, 16)
-            .padding(.bottom, 24)
         }
-        .scrollDisabled(!isExpanded)
     }
 
     /// Part of the scrolling content (not the header), so it takes no

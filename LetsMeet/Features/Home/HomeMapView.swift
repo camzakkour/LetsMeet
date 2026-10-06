@@ -30,6 +30,14 @@ struct HomeMapView: View {
     /// height - the card itself is laid out exactly as before.
     @State private var keyboardTopY: CGFloat?
     @State private var resultsDetent: PresentationDetent = .large
+    /// The restaurant whose map pin was last tapped, by its stable Yelp
+    /// business ID. Purely presentational (drives the pin's selected look);
+    /// kept here rather than in the view model since it's transient UI state.
+    @State private var selectedRestaurantID: String?
+    /// Asks the results list to scroll to a restaurant's card. Separate from
+    /// `selectedRestaurantID` so re-tapping the already-selected pin (after
+    /// scrolling away) still produces a new request.
+    @State private var scrollRequest: RestaurantScrollRequest?
     /// The location state to explain in an alert after a blocked "Find a
     /// place" tap; nil when no location alert is showing.
     @State private var locationAlertState: LocationAvailability?
@@ -59,9 +67,9 @@ struct HomeMapView: View {
                         .stroke(LetsMeetColor.orange, lineWidth: 4)
                 }
 
-                ForEach(mappableRestaurants) { restaurant in
+                ForEach(pinRestaurants) { restaurant in
                     Annotation("", coordinate: restaurant.coordinate!) {
-                        RestaurantMapPin()
+                        restaurantPin(for: restaurant)
                     }
                 }
 
@@ -155,6 +163,7 @@ struct HomeMapView: View {
         }
         .onChange(of: viewModel.restaurants) { _ in
             fitMapToRestaurants()
+            dropSelectionIfRestaurantGone()
         }
         // Find found several equally good suggestions: bring the field (and
         // with it the existing dropdown) back so the user can pick one.
@@ -171,10 +180,13 @@ struct HomeMapView: View {
                 // Every newly presented search opens fully expanded, even if a
                 // prior search's sheet was left at the peek detent.
                 resultsDetent = .large
-            } else if settingsPresenter == .results {
-                // Settings was hosted by the results sheet, which is gone;
-                // don't let the stale request present on the next results.
-                settingsPresenter = nil
+            } else {
+                clearRestaurantSelection()
+                if settingsPresenter == .results {
+                    // Settings was hosted by the results sheet, which is gone;
+                    // don't let the stale request present on the next results.
+                    settingsPresenter = nil
+                }
             }
         }
         .alert(
@@ -189,7 +201,12 @@ struct HomeMapView: View {
             Text(viewModel.errorMessage ?? "")
         }
         .sheet(isPresented: resultsSheetBinding) {
-            RestaurantResultsSheet(restaurants: viewModel.restaurants, isExpanded: resultsDetent == .large, isSearchInProgress: viewModel.isSearching)
+            RestaurantResultsSheet(
+                restaurants: viewModel.restaurants,
+                isExpanded: resultsDetent == .large,
+                isSearchInProgress: viewModel.isSearching,
+                scrollRequest: scrollRequest
+            )
                 // Settings opened while results are showing is presented from
                 // here: a second `.sheet` on the root view can't present while
                 // the results sheet is up.
@@ -244,6 +261,53 @@ struct HomeMapView: View {
     /// both need a concrete, non-optional coordinate per item.
     private var mappableRestaurants: [Restaurant] {
         viewModel.restaurants.filter { $0.coordinate != nil }
+    }
+
+    /// `mappableRestaurants` with the selected one moved last so MapKit draws
+    /// its pin on top of any neighbours (annotations have no z-index of their
+    /// own). `ForEach` identity is the restaurant ID, so a reorder moves the
+    /// existing annotation rather than recreating it.
+    private var pinRestaurants: [Restaurant] {
+        guard let selectedID = selectedRestaurantID,
+              let index = mappableRestaurants.firstIndex(where: { $0.id == selectedID }) else {
+            return mappableRestaurants
+        }
+        var ordered = mappableRestaurants
+        ordered.append(ordered.remove(at: index))
+        return ordered
+    }
+
+    private func restaurantPin(for restaurant: Restaurant) -> some View {
+        let isSelected = restaurant.id == selectedRestaurantID
+        return RestaurantMapPin(isSelected: isSelected)
+            .onTapGesture { selectRestaurant(restaurant) }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel("Restaurant, \(restaurant.name)")
+            .accessibilityAddTraits(.isButton)
+            .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    /// Selects the tapped restaurant's pin and asks the results list to bring
+    /// its card into view. Deliberately leaves `resultsDetent` and
+    /// `cameraPosition` alone: the sheet stays at whatever detent it's in.
+    private func selectRestaurant(_ restaurant: Restaurant) {
+        selectedRestaurantID = restaurant.id
+        scrollRequest = RestaurantScrollRequest(restaurantID: restaurant.id)
+    }
+
+    private func clearRestaurantSelection() {
+        selectedRestaurantID = nil
+        scrollRequest = nil
+    }
+
+    /// Progressive snapshots replace `viewModel.restaurants` repeatedly, so
+    /// the selection is only dropped once its restaurant is truly absent
+    /// (including the array being emptied by a new search).
+    private func dropSelectionIfRestaurantGone() {
+        guard let selectedID = selectedRestaurantID else { return }
+        if !viewModel.restaurants.contains(where: { $0.id == selectedID }) {
+            clearRestaurantSelection()
+        }
     }
 
     /// Splits the already-fetched A(user)->B(friend) route at the final
@@ -617,18 +681,28 @@ struct HomeMapView: View {
 }
 
 /// A simple, brand-colored pin marking one recommended restaurant on the map.
-/// All restaurant pins share this same design for this pass.
+/// All restaurant pins share this same design; the selected one is only
+/// slightly larger and ringed so it stands out without a different look.
 private struct RestaurantMapPin: View {
+    var isSelected = false
+
     var body: some View {
         ZStack {
             Circle()
                 .fill(Color.white)
                 .frame(width: 30, height: 30)
-                .shadow(color: .black.opacity(0.25), radius: 3, y: 2)
+                .shadow(color: .black.opacity(isSelected ? 0.4 : 0.25), radius: isSelected ? 4 : 3, y: 2)
+            if isSelected {
+                Circle()
+                    .stroke(LetsMeetColor.orange, lineWidth: 2.5)
+                    .frame(width: 34, height: 34)
+            }
             Image(systemName: "fork.knife.circle.fill")
                 .font(.system(size: 26))
                 .foregroundColor(LetsMeetColor.orange)
         }
+        .scaleEffect(isSelected ? 1.2 : 1)
+        .animation(.easeOut(duration: 0.15), value: isSelected)
     }
 }
 
