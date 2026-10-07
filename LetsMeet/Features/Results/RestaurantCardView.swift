@@ -6,6 +6,21 @@
 import SwiftUI
 import UIKit
 
+/// Yelp branding constants and asset lookup (assets under `Yelp/` in
+/// Assets.xcassets are Yelp's official, unmodified files).
+private enum YelpBranding {
+    static let logoHeight: CGFloat = 15
+
+    /// Yelp's star sprites exist for 0...5 in half-star steps, which is also
+    /// the granularity of the rating the API returns; anything else snaps to
+    /// the nearest half star and out-of-range values clamp.
+    static func starsAssetName(for rating: Double) -> String {
+        let steps = ["0", "0_5", "1", "1_5", "2", "2_5", "3", "3_5", "4", "4_5", "5"]
+        let halfStars = Int((min(5, max(0, rating)) * 2).rounded())
+        return "YelpStars_" + steps[halfStars]
+    }
+}
+
 /// The "Let's Meet decision card" for one restaurant: hero photo, name,
 /// rating/reviews/price, real bidirectional travel info for You/Friend,
 /// address, a Directions action (with a map-app chooser when more than one
@@ -67,13 +82,38 @@ struct RestaurantCardView: View {
 
             Spacer(minLength: 8)
 
-            ShareLink(item: shareText) {
-                Image(systemName: "square.and.arrow.up")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+            HStack(spacing: 14) {
+                yelpLogo
+                ShareLink(item: shareText) {
+                    Image(systemName: "square.and.arrow.up")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Share restaurant")
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Share restaurant")
+        }
+    }
+
+    /// Yelp's official logo (light/dark variants come from the asset
+    /// catalog), required wherever Yelp content is shown. Links to this
+    /// restaurant's Yelp page once the Business Details request has returned
+    /// its URL; until then it simply isn't tappable.
+    @ViewBuilder
+    private var yelpLogo: some View {
+        let logo = Image("YelpLogo")
+            .renderingMode(.original)
+            .resizable()
+            .scaledToFit()
+            .frame(height: YelpBranding.logoHeight)
+            .fixedSize()
+        if let yelpURL = businessDetails?.yelpURL {
+            Link(destination: yelpURL) { logo }
+                .contentShape(Rectangle().inset(by: -6))
+                .accessibilityLabel("Yelp")
+                .accessibilityHint("Opens this restaurant on Yelp")
+        } else {
+            logo.accessibilityLabel("Yelp")
         }
     }
 
@@ -95,29 +135,60 @@ struct RestaurantCardView: View {
 
     // MARK: - Metadata / travel info
 
-    /// Rating, review count, price, and categories on a single line that
-    /// truncates with an ellipsis rather than wrapping - built as one
-    /// concatenated `Text` (not an HStack of views) so SwiftUI truncates the
-    /// whole line as a unit instead of clipping individual segments. Each
-    /// piece is only appended when present, so a missing price or category
-    /// list never leaves behind a dangling "·" separator.
-    private var metadataLine: Text {
-        var line = Text(Image(systemName: "star.fill"))
-            .foregroundColor(.yellow)
-            + Text(" " + String(format: "%.1f", restaurant.rating))
-                .fontWeight(.bold)
-                .foregroundColor(.primary)
+    /// Yelp's branded star rating and review count, then price and categories
+    /// on a single line. The rating group never shrinks; only the trailing
+    /// price/categories text truncates with an ellipsis rather than wrapping.
+    /// Each trailing piece is only included when present, so a missing price
+    /// or category list never leaves behind a dangling "·" separator.
+    private var metadataLine: some View {
+        HStack(spacing: 6) {
+            ratingSummary
+            if !priceAndCategoryText.isEmpty {
+                Text("· \(priceAndCategoryText)")
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+            }
+        }
+    }
 
-        if let reviewCount = restaurant.reviewCount {
-            line = line + Text(" (\(reviewCount))").foregroundColor(.secondary)
+    private var priceAndCategoryText: String {
+        [priceText, categoryText.isEmpty ? nil : categoryText]
+            .compactMap { $0 }
+            .joined(separator: " · ")
+    }
+
+    /// Yelp requires its own branded stars (never a generic star) shown
+    /// beside the review count they're based on, linking to the business's
+    /// Yelp page. Tappable only once the Yelp URL has arrived.
+    @ViewBuilder
+    private var ratingSummary: some View {
+        let summary = HStack(spacing: 5) {
+            Image(YelpBranding.starsAssetName(for: restaurant.rating))
+                .renderingMode(.original)
+                .fixedSize()
+            if let reviewCount = restaurant.reviewCount {
+                Text("(\(reviewCount))")
+                    .foregroundColor(.secondary)
+            }
         }
-        if let priceText {
-            line = line + Text(" · \(priceText)").foregroundColor(.secondary)
+        .fixedSize()
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(ratingAccessibilityLabel)
+
+        if let yelpURL = businessDetails?.yelpURL {
+            Link(destination: yelpURL) { summary }
+        } else {
+            summary
         }
-        if !categoryText.isEmpty {
-            line = line + Text(" · \(categoryText)").foregroundColor(.secondary)
+    }
+
+    private var ratingAccessibilityLabel: String {
+        let rating = String(format: "%.1f", restaurant.rating)
+        guard let reviewCount = restaurant.reviewCount else {
+            return "Rated \(rating) out of 5 on Yelp"
         }
-        return line
+        return "Rated \(rating) out of 5 on Yelp, \(reviewCount) review\(reviewCount == 1 ? "" : "s")"
     }
 
     /// Real bidirectional travel info, from the same MapKit routes already
