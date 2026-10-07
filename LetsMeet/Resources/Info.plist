@@ -2,6 +2,8 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Let's Meet is a location based app. We use your location to meet with your friends in the middle.</string>
 	<key>LSApplicationQueriesSchemes</key>
