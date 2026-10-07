@@ -268,12 +268,20 @@ private struct RemotePhotoImage: View {
 /// Fetches and decodes one photo's raw bytes directly (bypassing AsyncImage)
 /// so its pixel dimensions are available to distinguish portrait from
 /// landscape. A small in-memory cache keeps repeated hero/thumbnail swaps of
-/// the same URL (e.g. cycling the carousel) instant with no flicker.
+/// the same URL (e.g. cycling the carousel) instant with no flicker. Entries
+/// carry their stored-at time and are discarded once older than
+/// `YelpCachePolicy.maxAge`, since these are Yelp-hosted photos.
 private final class RemoteImageBox: ObservableObject {
     @Published private(set) var image: UIImage?
 
+    private final class CachedPhoto {
+        let image: UIImage
+        let storedAt = Date()
+        init(_ image: UIImage) { self.image = image }
+    }
+
     private var currentURL: URL?
-    private static let cache = NSCache<NSURL, UIImage>()
+    private static let cache = NSCache<NSURL, CachedPhoto>()
 
     func load(_ newURL: URL?) {
         guard newURL != currentURL else { return }
@@ -285,14 +293,17 @@ private final class RemoteImageBox: ObservableObject {
         }
 
         if let cached = Self.cache.object(forKey: newURL as NSURL) {
-            image = cached
-            return
+            if YelpCachePolicy.isFresh(storedAt: cached.storedAt, now: Date()) {
+                image = cached.image
+                return
+            }
+            Self.cache.removeObject(forKey: newURL as NSURL)
         }
 
         image = nil
         URLSession.shared.dataTask(with: newURL) { [weak self] data, _, _ in
             guard let data, let decoded = UIImage(data: data) else { return }
-            Self.cache.setObject(decoded, forKey: newURL as NSURL)
+            Self.cache.setObject(CachedPhoto(decoded), forKey: newURL as NSURL)
             DispatchQueue.main.async {
                 guard self?.currentURL == newURL else { return }
                 self?.image = decoded

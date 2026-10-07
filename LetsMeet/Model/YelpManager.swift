@@ -33,14 +33,15 @@ class YelpManager {
     /// MeetingPlaceFinder, not computed or mutated here.
     var searchRadiusMeters: Double?
 
-    /// Full Business Details response, cached by business ID for the session
-    /// so scrolling a restaurant card away and back doesn't refetch. Backs
-    /// both `fetchPhotos` (photo gallery) and `fetchBusinessDetails` (phone,
-    /// Yelp URL) from the same single request/cache entry per business.
-    private var businessDetailsCache: [String: BusinessDetails] = [:]
-    /// Completions waiting on an in-flight Details request for a given ID,
-    /// so two near-simultaneous card appearances don't fire duplicate requests.
-    private var inFlightDetailsRequests: [String: [(Result<BusinessDetails, YelpManagerError>) -> Void]] = [:]
+    /// Full Business Details response, cached in memory by business ID (for
+    /// at most `YelpCachePolicy.maxAge`) so scrolling a restaurant card away
+    /// and back doesn't refetch. Backs both `fetchPhotos` (photo gallery) and
+    /// `fetchBusinessDetails` (phone, Yelp URL) from the same single
+    /// request/cache entry per business. It is also the in-flight registry
+    /// that stops two near-simultaneous card appearances from firing duplicate
+    /// requests, and it is lock-protected because callers arrive on the main
+    /// thread while URLSession completions arrive on its background queue.
+    private let businessDetailsStore = BusinessDetailsStore<BusinessDetails, YelpManagerError>()
 
     func didCaptureFriendsLocation(location: CLLocation) {
         friendLocation = location
@@ -164,32 +165,29 @@ class YelpManager {
     /// Details endpoint/cache `fetchPhotos` uses - never a second request for
     /// a business whose details (photos or otherwise) were already fetched.
     func fetchBusinessDetails(forBusinessID id: String, completion: @escaping (Result<BusinessDetails, YelpManagerError>) -> Void) {
-        if let cached = businessDetailsCache[id] {
+        switch businessDetailsStore.begin(id: id, completion: completion) {
+        case .cached(let cached):
             return completion(.success(cached))
+        case .joined:
+            return
+        case .startRequest:
+            break
         }
 
-        if inFlightDetailsRequests[id] != nil {
-            inFlightDetailsRequests[id]?.append(completion)
-            return
+        // Stores a success, drops the in-flight entry and collects the waiting
+        // completions under the store's lock, then runs them outside it.
+        func finish(_ result: Result<BusinessDetails, YelpManagerError>) {
+            businessDetailsStore.finish(id: id, result: result).forEach { $0(result) }
         }
-        inFlightDetailsRequests[id] = [completion]
 
         guard let url = URL(string: NetworkURLConstants.businessDetails + id) else {
-            let callbacks = inFlightDetailsRequests.removeValue(forKey: id) ?? []
-            callbacks.forEach { $0(.failure(.failedToUnwrapData)) }
-            return
+            return finish(.failure(.failedToUnwrapData))
         }
 
         var request = URLRequest(url: url)
         request.allHTTPHeaderFields = YelpTokenConstants.headers
 
-        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
-            guard let self = self else { return }
-            let callbacks = self.inFlightDetailsRequests.removeValue(forKey: id) ?? []
-
-            func finish(_ result: Result<BusinessDetails, YelpManagerError>) {
-                callbacks.forEach { $0(result) }
-            }
+        URLSession.shared.dataTask(with: request) { data, response, error in
 
             if let error = error {
                 return finish(.failure(.failedRequestWithError(error)))
@@ -205,7 +203,6 @@ class YelpManager {
 
             do {
                 let details = try JSONDecoder().decode(BusinessDetails.self, from: data)
-                self.businessDetailsCache[id] = details
                 finish(.success(details))
             } catch {
                 finish(.failure(.failedToDecodeRestaurants(error)))
