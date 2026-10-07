@@ -24,6 +24,7 @@
 		9F6E3B8746364938EAF238A3 /* MidpointFairnessConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2450844EDDF184164A8113A /* MidpointFairnessConfig.swift */; };
 		B0FF834701DE6DAB9048004B /* MeetingPlaceFinder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B9C15422793405AA06DA412 /* MeetingPlaceFinder.swift */; };
 		BB171A622AB25E49006CBDD5 /* config.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB171A612AB25E49006CBDD5 /* config.plist */; };
+		A0C0FFEE0000000000000031 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A0C0FFEE0000000000000032 /* PrivacyInfo.xcprivacy */; };
 		BB333966281C9F8E00A2142E /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB333965281C9F8E00A2142E /* AppDelegate.swift */; };
 		BB333968281C9F8E00A2142E /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB333967281C9F8E00A2142E /* SceneDelegate.swift */; };
 		BB333972281C9F9000A2142E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = BB333971281C9F9000A2142E /* Assets.xcassets */; };
@@ -69,6 +70,7 @@
 		5D8B2E6F1A9C47B3B2E1D5F8 /* SearchCancellationToken.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SearchCancellationToken.swift; sourceTree = "<group>"; };
 		424B3A66BC49721A02A8565A /* MapApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MapApp.swift; sourceTree = "<group>"; };
 		BB171A612AB25E49006CBDD5 /* config.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = config.plist; sourceTree = "<group>"; };
+		A0C0FFEE0000000000000032 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		BB333962281C9F8E00A2142E /* LetsMeet.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LetsMeet.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		BB333965281C9F8E00A2142E /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		BB333967281C9F8E00A2142E /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -243,6 +245,7 @@
 				BB333971281C9F9000A2142E /* Assets.xcassets */,
 				BB333976281C9F9000A2142E /* Info.plist */,
 				BB171A612AB25E49006CBDD5 /* config.plist */,
+				A0C0FFEE0000000000000032 /* PrivacyInfo.xcprivacy */,
 			);
 			path = Resources;
 			sourceTree = "<group>";
@@ -317,6 +320,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BB171A622AB25E49006CBDD5 /* config.plist in Resources */,
+				A0C0FFEE0000000000000031 /* PrivacyInfo.xcprivacy in Resources */,
 				BB333975281C9F9000A2142E /* LaunchScreen.storyboard in Resources */,
 				BB333972281C9F9000A2142E /* Assets.xcassets in Resources */,
 			);
